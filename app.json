@@ -1,5 +1,6 @@
 {
   "expo": {
+    "scheme": "pomodoro_app",
     "name": "pomodoro_app",
     "slug": "pomodoro_app",
     "version": "1.0.0",
@@ -25,6 +26,9 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-router"
+    ]
   }
 }
