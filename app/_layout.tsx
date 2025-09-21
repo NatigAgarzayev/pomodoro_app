@@ -1,7 +1,10 @@
 import React from 'react'
 import { Slot } from 'expo-router'
+import Theme from '@/components/provider/Theme'
 export default function RootLayout() {
     return (
-        <Slot />
+        <Theme name="default">
+            <Slot />
+        </Theme>
     )
 }
