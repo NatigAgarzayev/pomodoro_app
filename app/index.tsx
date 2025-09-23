@@ -3,6 +3,8 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import React, { useState } from 'react'
 import "../global.css"
 import PhazeStatus from '@/components/pages/main/PhazeStatus'
+import clsx from 'clsx'
+import StepsCounter from '@/components/pages/main/StepsCounter'
 
 const scenario = ['work', 'short_break', 'work', 'short_break', 'work', 'short_break', 'work', 'long_break']
 
@@ -19,10 +21,16 @@ export default function HomeScreen() {
     }
 
     return (
-        <SafeAreaView className='bg-pink-wall h-full'>
+        <SafeAreaView className={clsx('h-full',
+            {
+                'bg-pink-wall': scenario[step - 1] === 'work',
+                'bg-green-wall': scenario[step - 1] === 'short_break',
+                'bg-blue-wall': scenario[step - 1] === 'long_break',
+            }
+        )}>
             <View className='flex-1 justify-center items-center'>
                 <PhazeStatus step={step - 1} scenario={scenario} />
-                <Text className='text-black'>{step}/{scenario.length}</Text>
+                <StepsCounter step={step} scenarioLength={scenario.length} />
                 <Button title='Next' onPress={stepChangeHandler} />
             </View>
         </SafeAreaView >
