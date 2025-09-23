@@ -1,16 +1,20 @@
 import { View, Text, Button } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import "../global.css"
 import PhazeStatus from '@/components/pages/main/PhazeStatus'
 import clsx from 'clsx'
 import StepsCounter from '@/components/pages/main/StepsCounter'
 import CountdownTime from '@/components/pages/main/CountdownTime'
+import TimerControllers from '@/components/pages/main/TimerControllers'
 
 const scenario = ['work', 'short_break', 'work', 'short_break', 'work', 'short_break', 'work', 'long_break']
 
 export default function HomeScreen() {
     const [step, setStep] = useState<number>(1)
+    const [isPaused, setIsPaused] = useState<boolean>(true)
+    const [pauseTrigger, setPauseTrigger] = useState<boolean>(false)
+    const phaze = scenario[step - 1]
 
     const stepChangeHandler = () => {
         if (step < scenario.length) {
@@ -30,10 +34,10 @@ export default function HomeScreen() {
             }
         )}>
             <View className='flex-1 justify-center items-center'>
-                <PhazeStatus step={step - 1} scenario={scenario} />
+                <PhazeStatus phaze={phaze} />
                 <StepsCounter step={step} scenarioLength={scenario.length} />
-                <CountdownTime step={step - 1} scenario={scenario} />
-                <Button title='Next' onPress={stepChangeHandler} />
+                <CountdownTime pauseTrigger={pauseTrigger} step={step - 1} scenario={scenario} isPaused={isPaused} setIsPaused={setIsPaused} nextStep={stepChangeHandler} />
+                <TimerControllers pauseTrigger={pauseTrigger} setPauseTrigger={setPauseTrigger} phaze={phaze} isPaused={isPaused} setIsPaused={setIsPaused} nextStep={stepChangeHandler} />
             </View>
         </SafeAreaView >
     )
