@@ -12,7 +12,7 @@ const themes: any = {
 
             '--color-green-wall': '#f2fff5',
             '--color-green-primary': '#14401d',
-            '--color-green-secondary': 'rgba(255,76,76,.15)',
+            '--color-green-secondary': 'rgba(77,218,110,.15)',
             '--color-green-button': 'rgba(77,218,110,.62)',
 
             '--color-blue-wall': '#f2f9ff',
@@ -28,7 +28,7 @@ const themes: any = {
 
             '--color-green-wall': '#0d0404',
             '--color-green-primary': '#fff2f2',
-            '--color-green-secondary': 'rgba(255,76,76,.15)',
+            '--color-green-secondary': 'rgba(77,218,110,.15))',
             '--color-green-button': 'rgba(77,218,110,.62)',
 
             '--color-blue-wall': '#0d0404',

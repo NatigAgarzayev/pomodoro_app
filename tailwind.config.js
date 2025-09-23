@@ -24,7 +24,19 @@ module.exports = {
           primary: "var(--color-pink-primary)",
           secondary: "var(--color-pink-secondary)",
           button: "var(--color-pink-button)"
-        }
+        },
+        green: {
+          wall: "var(--color-green-wall)",
+          primary: "var(--color-green-primary)",
+          secondary: "var(--color-green-secondary)",
+          button: "var(--color-green-button)"
+        },
+        blue: {
+          wall: "var(--color-blue-wall)",
+          primary: "var(--color-blue-primary)",
+          secondary: "var(--color-blue-secondary)",
+          button: "var(--color-blue-button)"
+        },
       },
       fontFamily: {
         heading: undefined,
