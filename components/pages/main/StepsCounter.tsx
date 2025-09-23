@@ -4,7 +4,7 @@ import React from 'react'
 export default function StepsCounter({ scenarioLength, step }: { scenarioLength: number, step: number }) {
     return (
         <View>
-            <Text className='text-xl my-5'>{step} / {scenarioLength}</Text>
+            <Text className='text-xl mt-4 text-black-primary'>{step} / {scenarioLength}</Text>
         </View>
     )
 }

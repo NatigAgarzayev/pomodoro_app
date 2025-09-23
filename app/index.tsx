@@ -5,6 +5,7 @@ import "../global.css"
 import PhazeStatus from '@/components/pages/main/PhazeStatus'
 import clsx from 'clsx'
 import StepsCounter from '@/components/pages/main/StepsCounter'
+import CountdownTime from '@/components/pages/main/CountdownTime'
 
 const scenario = ['work', 'short_break', 'work', 'short_break', 'work', 'short_break', 'work', 'long_break']
 
@@ -31,6 +32,7 @@ export default function HomeScreen() {
             <View className='flex-1 justify-center items-center'>
                 <PhazeStatus step={step - 1} scenario={scenario} />
                 <StepsCounter step={step} scenarioLength={scenario.length} />
+                <CountdownTime step={step - 1} scenario={scenario} />
                 <Button title='Next' onPress={stepChangeHandler} />
             </View>
         </SafeAreaView >
