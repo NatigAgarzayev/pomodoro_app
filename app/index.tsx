@@ -7,6 +7,7 @@ import clsx from 'clsx'
 import StepsCounter from '@/components/pages/main/StepsCounter'
 import CountdownTime from '@/components/pages/main/CountdownTime'
 import TimerControllers from '@/components/pages/main/TimerControllers'
+import Settings from '@/components/pages/main/Settings'
 
 const scenario = ['work', 'short_break', 'work', 'short_break', 'work', 'short_break', 'work', 'long_break']
 
@@ -33,6 +34,9 @@ export default function HomeScreen() {
                 'bg-blue-wall': scenario[step - 1] === 'long_break',
             }
         )}>
+            <View>
+                <Settings phaze={phaze} />
+            </View>
             <View className='flex-1 justify-center items-center'>
                 <PhazeStatus phaze={phaze} />
                 <StepsCounter step={step} scenarioLength={scenario.length} />
