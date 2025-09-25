@@ -1,9 +1,10 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import Svg, { Path } from 'react-native-svg'
 import clsx from 'clsx'
 import { cssInterop } from 'nativewind'
 import { Pressable, Text, View } from 'react-native'
-import SlidingTabs, { SlidingTab } from '@/components/ui/sliding-tabs/SlidingTabs'
+import { SegmentedControl } from '@/components/ui/segment-control/SegmentControl'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 cssInterop(Svg, { className: 'style' })
 cssInterop(Path, {
@@ -13,8 +14,60 @@ cssInterop(Path, {
     },
 })
 
+type SettingsType = {
+    theme: 'System' | 'Light' | 'Dark';
+}
+
+const SETTINGS_KEY = '@pomodoro_settings';
+
+const defaultSettings: SettingsType = {
+    theme: 'System'
+};
+
 export default function Settings({ phaze }: { phaze: string }) {
     const [openPanel, setOpenPanel] = useState(false)
+    const [settingsObj, setSettingsObj] = useState<SettingsType>(defaultSettings)
+    const [isLoading, setIsLoading] = useState(true)
+
+    useEffect(() => {
+        loadSettings();
+    }, []);
+
+    const loadSettings = async () => {
+        try {
+            setIsLoading(true);
+            const savedSettings = await AsyncStorage.getItem(SETTINGS_KEY);
+
+            if (savedSettings) {
+                const parsedSettings = JSON.parse(savedSettings);
+                setSettingsObj({ ...defaultSettings, ...parsedSettings });
+            }
+        } catch (error) {
+            console.error('Error loading settings:', error);
+            setSettingsObj(defaultSettings);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const saveSettings = async (newSettings: SettingsType) => {
+        try {
+            await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(newSettings));
+        } catch (error) {
+            console.error('Error saving settings:', error);
+        }
+    };
+
+    const updateSettings = (key: keyof SettingsType, value: any) => {
+        const newSettings = { ...settingsObj, [key]: value };
+        setSettingsObj(newSettings);
+        saveSettings(newSettings);
+    };
+
+    const handleThemeChange = (theme: string) => {
+        updateSettings('theme', theme as SettingsType['theme']);
+    };
+
     return (
         <>
             <Pressable
@@ -37,7 +90,7 @@ export default function Settings({ phaze }: { phaze: string }) {
 
             <View className={clsx(
                 'shadow-lg w-full h-screen absolute top-0 z-50',
-                openPanel ? "right-0" : "right-full",
+                openPanel ? "right-0 visible" : "right-full invisible",
                 {
                     'bg-pink-wall': phaze === 'work',
                     'bg-green-wall': phaze === 'short_break',
@@ -50,15 +103,26 @@ export default function Settings({ phaze }: { phaze: string }) {
                             'text-pink-primary': phaze === 'work',
                             'text-green-primary': phaze === 'short_break',
                             'text-blue-primary': phaze === 'long_break',
-                        })} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" stroke-linejoin="round">
+                        })} width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <Path d="m15 18-6-6 6-6" />
                         </Svg>
                     </Pressable>
-                    <Text className='text-2xl font-bold '>Settings</Text>
+                    <Text className='text-2xl font-bold'>Settings</Text>
                 </View>
-                <View className='p-6'>
-                    <View>
-                        <Text className='text-xl'>Theme</Text>
+
+                <View className='p-6 h-full'>
+                    <View className='h-full'>
+                        <Text className='text-xl font-medium'>Theme:</Text>
+                        {!isLoading && (
+                            <SegmentedControl
+                                options={['System', 'Light', 'Dark']}
+                                selectedOption={settingsObj.theme}
+                                onOptionPress={handleThemeChange}
+                                phaze={phaze}
+                                className="mt-2"
+                            />
+                        )}
+
                     </View>
                 </View>
             </View>
