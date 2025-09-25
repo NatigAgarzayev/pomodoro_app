@@ -16,6 +16,7 @@ export default function HomeScreen() {
     const [isPaused, setIsPaused] = useState<boolean>(true)
     const [pauseTrigger, setPauseTrigger] = useState<boolean>(false)
     const phaze = scenario[step - 1]
+    const [open, setOpen] = useState(true)
 
     const stepChangeHandler = () => {
         if (step < scenario.length) {
