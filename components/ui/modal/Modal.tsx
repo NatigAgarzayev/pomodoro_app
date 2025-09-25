@@ -1,36 +1,60 @@
 import React, { ReactNode } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { BlurView } from 'expo-blur';
+import Svg, { Path } from 'react-native-svg'
+import clsx from 'clsx'
+import { cssInterop } from 'nativewind'
 
+cssInterop(Svg, { className: 'style' })
+cssInterop(Path, {
+    className: {
+        target: true,
+        nativeStyleToProp: { fill: true, stroke: true },
+    },
+})
 interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
     children: ReactNode;
-    title?: string;
+    phaze: string;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, phaze }) => {
     if (!isOpen) return null;
 
     return (
         <Pressable
-            className="fixed inset-0 z-50 h-full flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm"
+            className="absolute inset-0 z-40 h-screen flex items-center justify-center"
             onPress={onClose}
-            role="dialog"
-            style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)' }} // Fallback for opacity
         >
+            <BlurView
+                style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                }}
+                intensity={5}
+                tint='dark'
+                experimentalBlurMethod='dimezisBlurView'
+            />
             <Pressable
-                className="bg-white rounded-lg shadow-lg p-6 relative min-w-[300px] max-w-lg"
+                className="bg-white rounded-lg shadow-lg p-3 relative min-w-[300px] max-w-lg z-50"
                 onPress={e => e.stopPropagation()}
             >
                 <Pressable
-                    className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                    className="absolute -top-2 right-0 text-gray-500"
                     onPress={onClose}
-                    aria-label="Close modal"
+                    accessibilityLabel="Close modal"
                 >
-                    <Text>
-                        &times;
-
-                    </Text>
+                    <Svg className={clsx({
+                        'text-pink-primary': phaze === 'work',
+                        'text-green-primary': phaze === 'short_break',
+                        'text-blue-primary': phaze === 'long_break',
+                    })} width="34px" height="34px" viewBox="0 0 34 24">
+                        <Path fill="currentColor" d="M22.4633 21.6618C22.5689 21.7684 22.6282 21.9124 22.6282 22.0625C22.6282 22.2126 22.5689 22.3567 22.4633 22.4633C22.3558 22.5673 22.212 22.6254 22.0625 22.6254C21.9129 22.6254 21.7692 22.5673 21.6617 22.4633L17 17.7946L12.3383 22.4633C12.2308 22.5673 12.087 22.6254 11.9375 22.6254C11.7879 22.6254 11.6442 22.5673 11.5367 22.4633C11.4311 22.3567 11.3718 22.2126 11.3718 22.0625C11.3718 21.9124 11.4311 21.7684 11.5367 21.6618L16.2055 17L11.5367 12.3383C11.447 12.229 11.4012 12.0903 11.4081 11.9491C11.415 11.8078 11.4743 11.6743 11.5742 11.5743C11.6742 11.4743 11.8078 11.4151 11.949 11.4082C12.0902 11.4012 12.229 11.4471 12.3383 11.5368L17 16.2055L21.6617 11.5368C21.771 11.4471 21.9097 11.4012 22.051 11.4082C22.1922 11.4151 22.3258 11.4743 22.4257 11.5743C22.5257 11.6743 22.5849 11.8078 22.5919 11.9491C22.5988 12.0903 22.553 12.229 22.4633 12.3383L17.7945 17L22.4633 21.6618Z" fill="#471515" />
+                    </Svg>
                 </Pressable>
                 {children}
             </Pressable>
@@ -38,4 +62,4 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
     );
 };
 
-export default Modal
+export default Modal;

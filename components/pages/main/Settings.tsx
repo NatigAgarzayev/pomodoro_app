@@ -28,7 +28,12 @@ export default function Settings({ phaze }: { phaze: string }) {
                 </Svg>
             </Pressable>
             {showModal &&
-                <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
+                <Modal phaze={phaze} isOpen={showModal} onClose={() => setShowModal(false)}>
+                    <Text>asdasd</Text>
+                    <Text>asdasd</Text>
+                    <Text>asdasd</Text>
+                    <Text>asdasd</Text>
+                    <Text>asdasd</Text>
                     <Text>asdasd</Text>
                 </Modal>
             }
