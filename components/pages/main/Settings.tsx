@@ -5,6 +5,7 @@ import { cssInterop } from 'nativewind'
 import { Pressable, Text, View } from 'react-native'
 import { SegmentedControl } from '@/components/ui/segment-control/SegmentControl'
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Appearance, useColorScheme } from 'react-native'
 
 cssInterop(Svg, { className: 'style' })
 cssInterop(Path, {
@@ -65,8 +66,9 @@ export default function Settings({ phaze }: { phaze: string }) {
     };
 
     const handleThemeChange = (theme: string) => {
+        Appearance.setColorScheme(theme.toLowerCase())
         updateSettings('theme', theme as SettingsType['theme']);
-    };
+    }
 
     return (
         <>
@@ -107,12 +109,26 @@ export default function Settings({ phaze }: { phaze: string }) {
                             <Path d="m15 18-6-6 6-6" />
                         </Svg>
                     </Pressable>
-                    <Text className='text-2xl font-bold'>Settings</Text>
+                    <Text className={clsx(
+                        'text-2xl font-bold',
+                        {
+                            'text-pink-primary': phaze === 'work',
+                            'text-green-primary': phaze === 'short_break',
+                            'text-blue-primary': phaze === 'long_break',
+                        }
+                    )}>Settings</Text>
                 </View>
 
                 <View className='p-6 h-full'>
                     <View className='h-full'>
-                        <Text className='text-xl font-medium'>Theme:</Text>
+                        <Text className={clsx(
+                            'text-xl font-medium', {
+                            'text-pink-primary': phaze === 'work',
+                            'text-green-primary': phaze === 'short_break',
+                            'text-blue-primary': phaze === 'long_break',
+                        }
+
+                        )}>Theme:</Text>
                         {!isLoading && (
                             <SegmentedControl
                                 options={['System', 'Light', 'Dark']}

@@ -95,7 +95,7 @@ const SegmentedControl: React.FC<SegmentedControlProps> = React.memo(
                                 className={clsx(
                                     'text-base font-semibold',
                                     {
-                                        'text-gray-950': isSelected,
+                                        'text-black-primary': isSelected,
                                         'text-pink-primary/70': !isSelected && phaze === 'work',
                                         'text-green-primary/70': !isSelected && phaze === 'short_break',
                                         'text-blue-primary/70': !isSelected && phaze === 'long_break',
