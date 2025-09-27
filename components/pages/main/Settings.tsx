@@ -4,11 +4,11 @@ import clsx from 'clsx'
 import { cssInterop } from 'nativewind'
 import { ColorSchemeName, Pressable, Text, View } from 'react-native'
 import { SegmentedControl, SegmentItem } from '@/components/ui/segment-control/SegmentControl'
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Appearance, useColorScheme } from 'react-native'
 import { QUICK_TIMES } from '@/constants/DurationConstants'
-import { Picker } from '@react-native-picker/picker';
-import { Platform } from 'react-native';
+import { Picker } from '@react-native-picker/picker'
+import { Platform } from 'react-native'
 
 cssInterop(Svg, { className: 'style' })
 cssInterop(Path, {
@@ -19,15 +19,15 @@ cssInterop(Path, {
 })
 
 type SettingsType = {
-    theme: 'System' | 'Light' | 'Dark';
-    lofi: 'On' | 'Off';
+    theme: 'System' | 'Light' | 'Dark'
+    lofi: 'On' | 'Off'
     sound: 'System' | 'On' | 'Off'
     focusDuration: number
     shortBreakDuration: number
     longBreakDuration: number
 }
 
-const SETTINGS_KEY = '@pomodoro_settings';
+const SETTINGS_KEY = '@pomodoro_settings'
 
 const defaultSettings: SettingsType = {
     theme: 'System',
@@ -36,7 +36,7 @@ const defaultSettings: SettingsType = {
     focusDuration: 25,
     shortBreakDuration: 5,
     longBreakDuration: 15,
-};
+}
 
 export default function Settings({ phaze }: { phaze: string }) {
     const [openPanel, setOpenPanel] = useState(false)
@@ -46,43 +46,43 @@ export default function Settings({ phaze }: { phaze: string }) {
     const colorScheme = useColorScheme()
 
     useEffect(() => {
-        setUpdateStates(!updateStates);
-    }, [settingsObj]);
+        setUpdateStates(!updateStates)
+    }, [settingsObj])
 
     useEffect(() => {
-        loadSettings();
-    }, []);
+        loadSettings()
+    }, [])
 
     const loadSettings = async () => {
         try {
-            setIsLoading(true);
-            const savedSettings = await AsyncStorage.getItem(SETTINGS_KEY);
+            setIsLoading(true)
+            const savedSettings = await AsyncStorage.getItem(SETTINGS_KEY)
 
             if (savedSettings) {
-                const parsedSettings = JSON.parse(savedSettings);
-                setSettingsObj({ ...defaultSettings, ...parsedSettings });
+                const parsedSettings = JSON.parse(savedSettings)
+                setSettingsObj({ ...defaultSettings, ...parsedSettings })
             }
         } catch (error) {
-            console.error('Error loading settings:', error);
-            setSettingsObj(defaultSettings);
+            console.error('Error loading settings:', error)
+            setSettingsObj(defaultSettings)
         } finally {
-            setIsLoading(false);
+            setIsLoading(false)
         }
-    };
+    }
 
     const saveSettings = async (newSettings: SettingsType) => {
         try {
-            await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(newSettings));
+            await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(newSettings))
         } catch (error) {
-            console.error('Error saving settings:', error);
+            console.error('Error saving settings:', error)
         }
-    };
+    }
 
     const updateSettings = (key: keyof SettingsType, value: any) => {
-        const newSettings = { ...settingsObj, [key]: value };
-        setSettingsObj(newSettings);
-        saveSettings(newSettings);
-    };
+        const newSettings = { ...settingsObj, [key]: value }
+        setSettingsObj(newSettings)
+        saveSettings(newSettings)
+    }
 
     const handleThemeChange = (theme: string) => {
         Appearance.setColorScheme(theme.toLowerCase() as ColorSchemeName)
@@ -98,16 +98,16 @@ export default function Settings({ phaze }: { phaze: string }) {
     }
 
     const handleFocusDurationChange = (duration: number) => {
-        updateSettings('focusDuration', duration);
-    };
+        updateSettings('focusDuration', duration)
+    }
 
     const handleShortBreakDurationChange = (duration: number) => {
-        updateSettings('shortBreakDuration', duration);
-    };
+        updateSettings('shortBreakDuration', duration)
+    }
 
     const handleLongBreakDurationChange = (duration: number) => {
-        updateSettings('longBreakDuration', duration);
-    };
+        updateSettings('longBreakDuration', duration)
+    }
 
     return (
         <>
