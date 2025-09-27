@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import Svg, { Circle, Path, Rect } from 'react-native-svg'
+import Svg, { Circle, Line, Path, Rect } from 'react-native-svg'
 import clsx from 'clsx'
 import { cssInterop } from 'nativewind'
 import { ColorSchemeName, Pressable, Text, View } from 'react-native'
@@ -17,12 +17,16 @@ cssInterop(Path, {
 
 type SettingsType = {
     theme: 'System' | 'Light' | 'Dark';
+    lofi: 'On' | 'Off';
+    sound: 'On' | 'Off';
 }
 
 const SETTINGS_KEY = '@pomodoro_settings';
 
 const defaultSettings: SettingsType = {
-    theme: 'System'
+    theme: 'System',
+    lofi: 'Off',
+    sound: 'On',
 };
 
 export default function Settings({ phaze }: { phaze: string }) {
@@ -72,7 +76,15 @@ export default function Settings({ phaze }: { phaze: string }) {
 
     const handleThemeChange = (theme: string) => {
         Appearance.setColorScheme(theme.toLowerCase() as ColorSchemeName)
-        updateSettings('theme', theme as SettingsType['theme']);
+        updateSettings('theme', theme as SettingsType['theme'])
+    }
+
+    const handleLofiChange = (lofi: string) => {
+        updateSettings('lofi', lofi as SettingsType['lofi'])
+    }
+
+    const handleSoundChange = (sound: string) => {
+        updateSettings('sound', sound as SettingsType['sound'])
     }
 
     return (
@@ -124,8 +136,8 @@ export default function Settings({ phaze }: { phaze: string }) {
                     )}>Settings</Text>
                 </View>
 
-                <View className='p-6 h-full'>
-                    <View className='h-full'>
+                <View className='p-6'>
+                    <View>
                         <Text className={clsx(
                             'text-xl font-medium', {
                             'text-pink-primary': phaze === 'work',
@@ -177,7 +189,94 @@ export default function Settings({ phaze }: { phaze: string }) {
                         )}
 
                     </View>
+
+                    <View className='mt-4'>
+                        <Text className={clsx(
+                            'text-xl font-medium', {
+                            'text-pink-primary': phaze === 'work',
+                            'text-green-primary': phaze === 'short_break',
+                            'text-blue-primary': phaze === 'long_break',
+                        }
+
+                        )}>Lo-Fi:</Text>
+                        {!isLoading && (
+                            <SegmentedControl
+                                selectedValue={settingsObj.lofi}
+                                onValueChange={handleLofiChange}
+                                phaze={phaze}
+                                className="mt-2"
+                            >
+                                <SegmentItem value="Off">
+                                    <Svg
+                                        className={clsx({
+                                            'text-pink-primary': phaze === 'work',
+                                            'text-green-primary': phaze === 'short_break',
+                                            'text-blue-primary': phaze === 'long_break',
+                                        })}
+                                        width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <Path stroke="currentColor" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /><Line stroke="currentColor" x1="22" x2="16" y1="9" y2="15" /><Line stroke="currentColor" x1="16" x2="22" y1="9" y2="15" />
+                                    </Svg>
+                                </SegmentItem>
+                                <SegmentItem value="On">
+                                    <Svg
+                                        className={clsx({
+                                            'text-pink-primary': phaze === 'work',
+                                            'text-green-primary': phaze === 'short_break',
+                                            'text-blue-primary': phaze === 'long_break',
+                                        })}
+                                        width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <Path stroke="currentColor" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /><Path stroke="currentColor" d="M16 9a5 5 0 0 1 0 6" /><Path stroke="currentColor" d="M19.364 18.364a9 9 0 0 0 0-12.728" />
+                                    </Svg>
+                                </SegmentItem>
+                            </SegmentedControl>
+                        )}
+
+                    </View>
+
+                    <View className='mt-4'>
+                        <Text className={clsx(
+                            'text-xl font-medium', {
+                            'text-pink-primary': phaze === 'work',
+                            'text-green-primary': phaze === 'short_break',
+                            'text-blue-primary': phaze === 'long_break',
+                        }
+
+                        )}>Sound:</Text>
+                        {!isLoading && (
+                            <SegmentedControl
+                                selectedValue={settingsObj.sound}
+                                onValueChange={handleSoundChange}
+                                phaze={phaze}
+                                className="mt-2"
+                            >
+                                <SegmentItem value="Off">
+                                    <Svg
+                                        className={clsx({
+                                            'text-pink-primary': phaze === 'work',
+                                            'text-green-primary': phaze === 'short_break',
+                                            'text-blue-primary': phaze === 'long_break',
+                                        })}
+                                        width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <Path stroke="currentColor" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /><Line stroke="currentColor" x1="22" x2="16" y1="9" y2="15" /><Line stroke="currentColor" x1="16" x2="22" y1="9" y2="15" />
+                                    </Svg>
+                                </SegmentItem>
+                                <SegmentItem value="On">
+                                    <Svg
+                                        className={clsx({
+                                            'text-pink-primary': phaze === 'work',
+                                            'text-green-primary': phaze === 'short_break',
+                                            'text-blue-primary': phaze === 'long_break',
+                                        })}
+                                        width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <Path stroke="currentColor" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /><Path stroke="currentColor" d="M16 9a5 5 0 0 1 0 6" /><Path stroke="currentColor" d="M19.364 18.364a9 9 0 0 0 0-12.728" />
+                                    </Svg>
+                                </SegmentItem>
+                            </SegmentedControl>
+                        )}
+
+                    </View>
                 </View>
+
             </View>
         </>
     )

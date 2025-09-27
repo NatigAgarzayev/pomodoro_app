@@ -73,7 +73,7 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
         <SegmentedControlContext.Provider value={contextValue}>
             <View
                 className={clsx(
-                    'flex-row h-14 rounded-3xl border',
+                    'flex-row h-14 rounded-full border',
                     {
                         'bg-pink-secondary border-pink-secondary': phaze === 'work',
                         'bg-green-secondary border-green-secondary': phaze === 'short_break',
@@ -91,7 +91,7 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
             >
                 <Animated.View
                     className={clsx(
-                        'absolute rounded-3xl',
+                        'absolute rounded-full',
                         {
                             'bg-pink-secondary': phaze === 'work',
                             'bg-green-secondary': phaze === 'short_break',
@@ -156,15 +156,14 @@ const SegmentItem: React.FC<SegmentItemProps> = ({
 
 const styles = StyleSheet.create({
     innerShadow: {
-        shadowColor: 'rgba(0, 0, 0, 0.1)',
+        shadowColor: 'transparent',
         shadowOffset: {
             width: 0,
-            height: 1,
+            height: 0,
         },
-        shadowOpacity: 0.5,
-        shadowRadius: 2,
-        elevation: 1,
-        position: 'relative',
+        shadowOpacity: 0,
+        shadowRadius: 0,
+        elevation: 0,
     },
     activeShadow: {
         shadowColor: 'rgba(0, 0, 0, 0.2)',
@@ -176,6 +175,6 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 2,
     },
-});
+})
 
 export { SegmentedControl, SegmentItem };
