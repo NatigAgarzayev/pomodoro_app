@@ -18,7 +18,7 @@ cssInterop(Path, {
 type SettingsType = {
     theme: 'System' | 'Light' | 'Dark';
     lofi: 'On' | 'Off';
-    sound: 'On' | 'Off';
+    sound: 'System' | 'On' | 'Off';
 }
 
 const SETTINGS_KEY = '@pomodoro_settings';
@@ -249,6 +249,17 @@ export default function Settings({ phaze }: { phaze: string }) {
                                 phaze={phaze}
                                 className="mt-2"
                             >
+                                <SegmentItem value="System">
+                                    <Svg
+                                        className={clsx({
+                                            'text-pink-primary': phaze === 'work',
+                                            'text-green-primary': phaze === 'short_break',
+                                            'text-blue-primary': phaze === 'long_break',
+                                        })}
+                                        width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <Path stroke="currentColor" d="m2 8 2 2-2 2 2 2-2 2" /><Path stroke="currentColor" d="m22 8-2 2 2 2-2 2 2 2" /><Rect stroke="currentColor" width="8" height="14" x="8" y="5" rx="1" />
+                                    </Svg>
+                                </SegmentItem>
                                 <SegmentItem value="Off">
                                     <Svg
                                         className={clsx({
