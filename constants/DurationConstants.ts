@@ -1,9 +1,9 @@
 export const QUICK_TIMES = [
-    { label: '1m', value: 1 },
-    { label: '5m', value: 5 },
-    { label: '10m', value: 10 },
-    { label: '15m', value: 15 },
-    { label: '25m', value: 25 },
-    { label: '30m', value: 30 },
-    { label: '1h', value: 60 },
+    { label: '1m', value: 60 },
+    { label: '5m', value: 300 },
+    { label: '10m', value: 600 },
+    { label: '15m', value: 900 },
+    { label: '25m', value: 1500 },
+    { label: '30m', value: 1800 },
+    { label: '1h', value: 3600 },
 ];

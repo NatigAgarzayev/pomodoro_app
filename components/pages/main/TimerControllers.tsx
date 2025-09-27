@@ -1,8 +1,9 @@
 import { View, Text, Pressable } from 'react-native'
-import React from 'react'
+import React, { useState } from 'react'
 import Svg, { Circle, Rect, Path, G } from 'react-native-svg'
 import clsx from 'clsx'
 import { cssInterop } from 'nativewind'
+
 
 cssInterop(Svg, { className: 'style' });
 cssInterop(Path, {
@@ -22,6 +23,14 @@ interface TimerControllersProps {
 }
 
 export default function TimerControllers({ pauseTrigger, setPauseTrigger, phaze, isPaused, setIsPaused, nextStep }: TimerControllersProps) {
+    const [isDisabled, setIsDisabled] = useState(false)
+
+    const handleNextStep = () => {
+        nextStep()
+        setIsDisabled(true)
+        setTimeout(() => setIsDisabled(false), 1000)
+    }
+
     return (
         <View className='flex-row items-center gap-4 mt-8'>
             <Pressable onPress={() => setPauseTrigger(!pauseTrigger)} className={clsx('w-20 h-20 flex justify-center items-center rounded-3xl',
@@ -71,7 +80,8 @@ export default function TimerControllers({ pauseTrigger, setPauseTrigger, phaze,
                 }
             </Pressable>
             <Pressable
-                onPress={nextStep}
+                disabled={isDisabled}
+                onPress={handleNextStep}
                 className={clsx('w-20 h-20 flex justify-center items-center rounded-3xl',
                     {
                         'bg-pink-secondary': phaze === 'work',

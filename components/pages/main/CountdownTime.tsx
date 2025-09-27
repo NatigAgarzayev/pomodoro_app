@@ -1,8 +1,13 @@
 import { View, Text } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import clsx from 'clsx'
+import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio'
+import { SettingsType } from '@/constants/SettingsConstants'
+
+const endSound = require('../../../assets/audio/time_ended.mp3')
 
 interface CountdownTimeProps {
+    settingsObj: SettingsType,
     step: number,
     pauseTrigger: boolean,
     scenario: string[],
@@ -11,20 +16,19 @@ interface CountdownTimeProps {
     nextStep: () => void,
 }
 
-const timeSettings: {
-    [key: string]: number
-} = {
-    work: 1500,
-    short_break: 300,
-    long_break: 900,
-}
-
-export default function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, nextStep }: CountdownTimeProps) {
+export default function CountdownTime({ settingsObj, pauseTrigger, step, scenario, isPaused, setIsPaused, nextStep }: CountdownTimeProps) {
     const phaze = scenario[step]
-    const [timeLeft, setTimeLeft] = useState<number>(Number(timeSettings[phaze]))
+    const transformedPhaze = phaze === 'work' ? 'focusDuration' : phaze === 'short_break' ? 'shortBreakDuration' : 'longBreakDuration'
+    const [timeLeft, setTimeLeft] = useState<number>(Number(settingsObj[transformedPhaze]))
+    const player3 = useAudioPlayer(endSound)
 
     useEffect(() => {
-        let interval: ReturnType<typeof setInterval> = null
+        setTimeLeft(Number(settingsObj[transformedPhaze]))
+        setIsPaused(true)
+    }, [settingsObj.focusDuration, settingsObj.shortBreakDuration, settingsObj.longBreakDuration])
+
+    useEffect(() => {
+        let interval: any = null
 
         if (!isPaused && timeLeft > 0) {
             interval = setInterval(() => {
@@ -39,8 +43,12 @@ export default function CountdownTime({ pauseTrigger, step, scenario, isPaused, 
 
     useEffect(() => {
         const timeCheckInterval = setInterval(() => {
-            if (scenario[step] && timeSettings[scenario[step]] === timeLeft) {
+            if (scenario[step] && settingsObj[transformedPhaze] === timeLeft) {
             } else if (timeLeft === 0) {
+                if (settingsObj.sound === 'On') {
+                    player3.seekTo(0)
+                    player3.play()
+                }
                 nextStep()
             }
         }, 1000)
@@ -50,7 +58,7 @@ export default function CountdownTime({ pauseTrigger, step, scenario, isPaused, 
     }, [step, scenario, timeLeft])
 
     useEffect(() => {
-        setTimeLeft(timeSettings[phaze])
+        setTimeLeft(settingsObj[transformedPhaze])
         setIsPaused(true)
     }, [step, phaze, pauseTrigger])
 

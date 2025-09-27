@@ -9,6 +9,7 @@ import { Appearance, useColorScheme } from 'react-native'
 import { QUICK_TIMES } from '@/constants/DurationConstants'
 import { Picker } from '@react-native-picker/picker'
 import { Platform } from 'react-native'
+import { defaultSettings, SETTINGS_KEY, SettingsType } from '@/constants/SettingsConstants'
 
 cssInterop(Svg, { className: 'style' })
 cssInterop(Path, {
@@ -18,29 +19,8 @@ cssInterop(Path, {
     },
 })
 
-type SettingsType = {
-    theme: 'System' | 'Light' | 'Dark'
-    lofi: 'On' | 'Off'
-    sound: 'System' | 'On' | 'Off'
-    focusDuration: number
-    shortBreakDuration: number
-    longBreakDuration: number
-}
-
-const SETTINGS_KEY = '@pomodoro_settings'
-
-const defaultSettings: SettingsType = {
-    theme: 'System',
-    lofi: 'Off',
-    sound: 'On',
-    focusDuration: 25,
-    shortBreakDuration: 5,
-    longBreakDuration: 15,
-}
-
-export default function Settings({ phaze }: { phaze: string }) {
+export default function Settings({ settingsObj, setSettingsObj, phaze }: { settingsObj: SettingsType, setSettingsObj: (val: SettingsType) => void, phaze: string }) {
     const [openPanel, setOpenPanel] = useState(false)
-    const [settingsObj, setSettingsObj] = useState<SettingsType>(defaultSettings)
     const [isLoading, setIsLoading] = useState(true)
     const [updateStates, setUpdateStates] = useState(false)
     const colorScheme = useColorScheme()

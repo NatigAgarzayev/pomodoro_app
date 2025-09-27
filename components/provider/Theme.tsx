@@ -1,6 +1,9 @@
 import { View } from 'react-native'
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useColorScheme, vars } from 'nativewind'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+
+const SETTINGS_KEY = '@pomodoro_settings'
 
 const themes: any = {
     default: {
@@ -44,7 +47,24 @@ const themes: any = {
 }
 
 export default function Theme({ name, children }: { name: string, children: React.ReactNode }) {
-    const { colorScheme } = useColorScheme()
+    const { colorScheme, setColorScheme } = useColorScheme()
+
+    useEffect(() => {
+        loadTheme()
+    }, [])
+
+    const loadTheme = async () => {
+        try {
+            const savedSettings = await AsyncStorage.getItem(SETTINGS_KEY)
+
+            if (savedSettings) {
+                const parsedSettings = JSON.parse(savedSettings)
+                setColorScheme(parsedSettings.theme.toLowerCase() || 'light')
+            }
+        } catch (error) {
+            console.error('Error loading theme:', error)
+        }
+    }
     return (
         <View style={themes[name][colorScheme ?? "light"]}>
             {children}
