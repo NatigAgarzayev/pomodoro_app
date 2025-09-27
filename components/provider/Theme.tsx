@@ -5,7 +5,7 @@ import { useColorScheme, vars } from 'nativewind'
 const themes: any = {
     default: {
         light: vars({
-            '--color-black-primary': 'black',
+            '--color-black-primary': '#000000',
 
             '--color-pink-wall': '#fff2f2',
             '--color-pink-primary': '#471515',
@@ -23,7 +23,7 @@ const themes: any = {
             '--color-blue-button': 'rgba(76,172,255,.62)',
         }),
         dark: vars({
-            '--color-black-primary': 'white',
+            '--color-black-primary': '#ffffff',
 
             '--color-pink-wall': '#0d0404',
             '--color-pink-primary': '#fff2f2',

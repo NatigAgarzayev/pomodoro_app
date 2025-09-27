@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react'
-import Svg, { Path } from 'react-native-svg'
+import Svg, { Circle, Path, Rect } from 'react-native-svg'
 import clsx from 'clsx'
 import { cssInterop } from 'nativewind'
-import { Pressable, Text, View } from 'react-native'
-import { SegmentedControl } from '@/components/ui/segment-control/SegmentControl'
+import { ColorSchemeName, Pressable, Text, View } from 'react-native'
+import { SegmentedControl, SegmentItem } from '@/components/ui/segment-control/SegmentControl'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Appearance, useColorScheme } from 'react-native'
 
@@ -29,6 +29,11 @@ export default function Settings({ phaze }: { phaze: string }) {
     const [openPanel, setOpenPanel] = useState(false)
     const [settingsObj, setSettingsObj] = useState<SettingsType>(defaultSettings)
     const [isLoading, setIsLoading] = useState(true)
+    const [updateStates, setUpdateStates] = useState(false)
+
+    useEffect(() => {
+        setUpdateStates(!updateStates);
+    }, [settingsObj]);
 
     useEffect(() => {
         loadSettings();
@@ -66,7 +71,7 @@ export default function Settings({ phaze }: { phaze: string }) {
     };
 
     const handleThemeChange = (theme: string) => {
-        Appearance.setColorScheme(theme.toLowerCase())
+        Appearance.setColorScheme(theme.toLowerCase() as ColorSchemeName)
         updateSettings('theme', theme as SettingsType['theme']);
     }
 
@@ -131,12 +136,44 @@ export default function Settings({ phaze }: { phaze: string }) {
                         )}>Theme:</Text>
                         {!isLoading && (
                             <SegmentedControl
-                                options={['System', 'Light', 'Dark']}
-                                selectedOption={settingsObj.theme}
-                                onOptionPress={handleThemeChange}
+                                selectedValue={settingsObj.theme}
+                                onValueChange={handleThemeChange}
                                 phaze={phaze}
                                 className="mt-2"
-                            />
+                            >
+                                <SegmentItem value="System">
+                                    <Svg
+                                        className={clsx({
+                                            'text-pink-primary': phaze === 'work',
+                                            'text-green-primary': phaze === 'short_break',
+                                            'text-blue-primary': phaze === 'long_break',
+                                        })}
+                                        width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><Rect stroke="currentColor" width="14" height="20" x="5" y="2" rx="2" ry="2" /><Path stroke="currentColor" d="M12 18h.01" />
+                                    </Svg>
+                                </SegmentItem>
+                                <SegmentItem value="Light">
+                                    <Svg
+                                        className={clsx({
+                                            'text-pink-primary': phaze === 'work',
+                                            'text-green-primary': phaze === 'short_break',
+                                            'text-blue-primary': phaze === 'long_break',
+                                        })}
+                                        width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <Circle stroke="currentColor" cx="12" cy="12" r="4" /><Path stroke="currentColor" d="M12 2v2" /><Path stroke="currentColor" d="M12 20v2" /><Path stroke="currentColor" d="m4.93 4.93 1.41 1.41" /><Path stroke="currentColor" d="m17.66 17.66 1.41 1.41" /><Path stroke="currentColor" d="M2 12h2" /><Path stroke="currentColor" d="M20 12h2" /><Path stroke="currentColor" d="m6.34 17.66-1.41 1.41" /><Path stroke="currentColor" d="m19.07 4.93-1.41 1.41" />
+                                    </Svg>
+                                </SegmentItem>
+                                <SegmentItem value="Dark">
+                                    <Svg
+                                        className={clsx({
+                                            'text-pink-primary dark:text-white': phaze === 'work',
+                                            'text-green-primary': phaze === 'short_break',
+                                            'text-blue-primary': phaze === 'long_break',
+                                        })}
+                                        width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <Path stroke="currentColor" d="M18 5h4" /><Path stroke="currentColor" d="M20 3v4" /><Path stroke="currentColor" d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" />
+                                    </Svg>
+                                </SegmentItem>
+                            </SegmentedControl>
                         )}
 
                     </View>

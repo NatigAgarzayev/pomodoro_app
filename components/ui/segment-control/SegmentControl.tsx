@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { createContext, useContext } from 'react';
 import {
     StyleSheet,
-    Text,
     TouchableOpacity,
     View,
     useWindowDimensions,
@@ -12,40 +11,73 @@ import Animated, {
 } from 'react-native-reanimated';
 import clsx from 'clsx';
 
+type SegmentedControlContextType = {
+    selectedValue: string;
+    onValueChange?: (value: string) => void;
+    phaze: string;
+    itemWidth: number;
+    children: React.ReactElement[];
+};
+
+const SegmentedControlContext = createContext<SegmentedControlContextType | null>(null);
+
+const useSegmentedControl = () => {
+    const context = useContext(SegmentedControlContext);
+    if (!context) {
+        throw new Error('SegmentItem must be used within SegmentedControl');
+    }
+    return context;
+};
+
+// Main SegmentedControl component
 type SegmentedControlProps = {
-    options: string[];
-    selectedOption: string;
-    onOptionPress?: (option: string) => void;
-    phaze?: string
+    children: React.ReactElement[];
+    selectedValue: string;
+    onValueChange?: (value: string) => void;
+    phaze?: string;
     className?: string;
 };
 
-const SegmentedControl: React.FC<SegmentedControlProps> = React.memo(
-    ({ options, selectedOption, onOptionPress, phaze = 'work', className }) => {
-        const { width: windowWidth } = useWindowDimensions();
+const SegmentedControl: React.FC<SegmentedControlProps> = ({
+    children,
+    selectedValue,
+    onValueChange,
+    phaze = 'work',
+    className
+}) => {
+    const { width: windowWidth } = useWindowDimensions();
 
-        const internalPadding = 20;
-        const segmentedControlWidth = windowWidth - 40;
+    const internalPadding = 20;
+    const segmentedControlWidth = windowWidth - 40;
+    const itemWidth = (segmentedControlWidth - internalPadding) / children.length;
 
-        const itemWidth =
-            (segmentedControlWidth - internalPadding) / options.length;
+    const selectedIndex = children.findIndex(child => child.props.value === selectedValue);
 
-        const rStyle = useAnimatedStyle(() => {
-            return {
-                left: withTiming(
-                    itemWidth * options.indexOf(selectedOption) + internalPadding / 2
-                ),
-            };
-        }, [selectedOption, options, itemWidth]);
+    const rStyle = useAnimatedStyle(() => {
+        return {
+            left: withTiming(
+                itemWidth * selectedIndex + internalPadding / 2
+            ),
+        };
+    }, [selectedValue, selectedIndex, itemWidth]);
 
-        return (
+    const contextValue: SegmentedControlContextType = {
+        selectedValue,
+        onValueChange,
+        phaze,
+        itemWidth,
+        children
+    };
+
+    return (
+        <SegmentedControlContext.Provider value={contextValue}>
             <View
                 className={clsx(
                     'flex-row h-14 rounded-3xl border',
                     {
-                        'bg-pink-wall/10 border-pink-wall/30': phaze === 'work',
-                        'bg-green-wall/10 border-green-wall/30': phaze === 'short_break',
-                        'bg-blue-wall/10 border-blue-wall/30': phaze === 'long_break',
+                        'bg-pink-secondary border-pink-secondary': phaze === 'work',
+                        'bg-green-secondary border-green-secondary': phaze === 'short_break',
+                        'bg-blue-secondary border-blue-secondary': phaze === 'long_break',
                     },
                     className
                 )}
@@ -59,11 +91,11 @@ const SegmentedControl: React.FC<SegmentedControlProps> = React.memo(
             >
                 <Animated.View
                     className={clsx(
-                        'absolute rounded-xl',
+                        'absolute rounded-3xl',
                         {
-                            'bg-pink-wall': phaze === 'work',
-                            'bg-green-wall': phaze === 'short_break',
-                            'bg-blue-wall': phaze === 'long_break',
+                            'bg-pink-secondary': phaze === 'work',
+                            'bg-green-secondary': phaze === 'short_break',
+                            'bg-blue-secondary': phaze === 'long_break',
                         }
                     )}
                     style={[
@@ -76,41 +108,51 @@ const SegmentedControl: React.FC<SegmentedControlProps> = React.memo(
                         styles.activeShadow,
                     ]}
                 />
-                {options.map((option) => {
-                    const isSelected = selectedOption === option;
-                    return (
-                        <TouchableOpacity
-                            onPress={() => {
-                                onOptionPress?.(option);
-                            }}
-                            key={option}
-                            className="justify-center items-center"
-                            style={[
-                                {
-                                    width: itemWidth,
-                                },
-                            ]}
-                        >
-                            <Text
-                                className={clsx(
-                                    'text-base font-semibold',
-                                    {
-                                        'text-black-primary': isSelected,
-                                        'text-pink-primary/70': !isSelected && phaze === 'work',
-                                        'text-green-primary/70': !isSelected && phaze === 'short_break',
-                                        'text-blue-primary/70': !isSelected && phaze === 'long_break',
-                                    }
-                                )}
-                            >
-                                {option}
-                            </Text>
-                        </TouchableOpacity>
-                    );
-                })}
+                {children}
             </View>
-        );
-    }
-);
+        </SegmentedControlContext.Provider>
+    );
+};
+
+type SegmentItemProps = {
+    value: string;
+    children: React.ReactNode;
+    className?: string;
+};
+
+const SegmentItem: React.FC<SegmentItemProps> = ({
+    value,
+    children,
+    className
+}) => {
+    const { selectedValue, onValueChange, phaze, itemWidth } = useSegmentedControl();
+    const isSelected = selectedValue === value;
+
+    return (
+        <TouchableOpacity
+            onPress={() => onValueChange?.(value)}
+            className={clsx("justify-center items-center", className)}
+            style={[
+                {
+                    width: itemWidth,
+                    zIndex: 10,
+                },
+            ]}
+            activeOpacity={1}
+        >
+            <View
+                className={clsx({
+                    'text-black-primary': isSelected,
+                    'text-pink-primary': !isSelected && phaze === 'work',
+                    'text-green-primary': !isSelected && phaze === 'short_break',
+                    'text-blue-primary': !isSelected && phaze === 'long_break',
+                })}
+            >
+                {children}
+            </View>
+        </TouchableOpacity>
+    );
+};
 
 const styles = StyleSheet.create({
     innerShadow: {
@@ -119,22 +161,21 @@ const styles = StyleSheet.create({
             width: 0,
             height: 1,
         },
-        shadowOpacity: 1,
+        shadowOpacity: 0.5,
         shadowRadius: 2,
         elevation: 1,
-        // Inner shadow effect using overlay
         position: 'relative',
     },
     activeShadow: {
-        shadowColor: 'rgba(0, 0, 0, 0.6)',
+        shadowColor: 'rgba(0, 0, 0, 0.2)',
         shadowOffset: {
             width: 0,
             height: 3,
         },
-        shadowOpacity: 1,
+        shadowOpacity: 0.3,
         shadowRadius: 4,
-        elevation: 4,
+        elevation: 2,
     },
 });
 
-export { SegmentedControl };
+export { SegmentedControl, SegmentItem };
