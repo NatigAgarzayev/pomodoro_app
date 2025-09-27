@@ -19,7 +19,7 @@ cssInterop(Path, {
     },
 })
 
-export default function Settings({ settingsObj, setSettingsObj, phaze }: { settingsObj: SettingsType, setSettingsObj: (val: SettingsType) => void, phaze: string }) {
+export default function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any, settingsObj: SettingsType, setSettingsObj: (val: SettingsType) => void, phaze: string }) {
     const [openPanel, setOpenPanel] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
     const [updateStates, setUpdateStates] = useState(false)
@@ -70,6 +70,9 @@ export default function Settings({ settingsObj, setSettingsObj, phaze }: { setti
     }
 
     const handleLofiChange = (lofi: string) => {
+        if (lofi === 'Off') {
+            sound2.pause()
+        }
         updateSettings('lofi', lofi as SettingsType['lofi'])
     }
 

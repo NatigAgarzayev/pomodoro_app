@@ -97,7 +97,7 @@ export default function HomeScreen() {
             }
         )}>
             <View>
-                <Settings settingsObj={settingsObj} setSettingsObj={setSettingsObj} phaze={phaze} />
+                <Settings sound2={player2} settingsObj={settingsObj} setSettingsObj={setSettingsObj} phaze={phaze} />
             </View>
             <View className='flex-1 justify-center items-center'>
                 <PhazeStatus phaze={phaze} />
