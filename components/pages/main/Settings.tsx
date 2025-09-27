@@ -6,6 +6,9 @@ import { ColorSchemeName, Pressable, Text, View } from 'react-native'
 import { SegmentedControl, SegmentItem } from '@/components/ui/segment-control/SegmentControl'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Appearance, useColorScheme } from 'react-native'
+import { QUICK_TIMES } from '@/constants/DurationConstants'
+import { Picker } from '@react-native-picker/picker';
+import { Platform } from 'react-native';
 
 cssInterop(Svg, { className: 'style' })
 cssInterop(Path, {
@@ -18,7 +21,10 @@ cssInterop(Path, {
 type SettingsType = {
     theme: 'System' | 'Light' | 'Dark';
     lofi: 'On' | 'Off';
-    sound: 'System' | 'On' | 'Off';
+    sound: 'System' | 'On' | 'Off'
+    focusDuration: number
+    shortBreakDuration: number
+    longBreakDuration: number
 }
 
 const SETTINGS_KEY = '@pomodoro_settings';
@@ -27,6 +33,9 @@ const defaultSettings: SettingsType = {
     theme: 'System',
     lofi: 'Off',
     sound: 'On',
+    focusDuration: 25,
+    shortBreakDuration: 5,
+    longBreakDuration: 15,
 };
 
 export default function Settings({ phaze }: { phaze: string }) {
@@ -34,6 +43,7 @@ export default function Settings({ phaze }: { phaze: string }) {
     const [settingsObj, setSettingsObj] = useState<SettingsType>(defaultSettings)
     const [isLoading, setIsLoading] = useState(true)
     const [updateStates, setUpdateStates] = useState(false)
+    const colorScheme = useColorScheme()
 
     useEffect(() => {
         setUpdateStates(!updateStates);
@@ -86,6 +96,18 @@ export default function Settings({ phaze }: { phaze: string }) {
     const handleSoundChange = (sound: string) => {
         updateSettings('sound', sound as SettingsType['sound'])
     }
+
+    const handleFocusDurationChange = (duration: number) => {
+        updateSettings('focusDuration', duration);
+    };
+
+    const handleShortBreakDurationChange = (duration: number) => {
+        updateSettings('shortBreakDuration', duration);
+    };
+
+    const handleLongBreakDurationChange = (duration: number) => {
+        updateSettings('longBreakDuration', duration);
+    };
 
     return (
         <>
@@ -286,9 +308,170 @@ export default function Settings({ phaze }: { phaze: string }) {
                         )}
 
                     </View>
-                </View>
+                    <View className='mt-4'>
+                        <Text className={clsx(
+                            'text-xl font-medium', {
+                            'text-pink-primary': phaze === 'work',
+                            'text-green-primary': phaze === 'short_break',
+                            'text-blue-primary': phaze === 'long_break',
+                        }
 
-            </View>
+                        )}>Focust time:</Text>
+                        {!isLoading && (
+                            <View className={clsx(
+                                'border rounded-full mt-2 overflow-hidden',
+                                {
+                                    'border-pink-secondary bg-pink-secondary': phaze === 'work',
+                                    'border-green-secondary bg-green-secondary': phaze === 'short_break',
+                                    'border-blue-secondary bg-blue-secondary': phaze === 'long_break',
+                                }
+                            )}>
+
+                                <Picker
+                                    selectedValue={settingsObj.focusDuration}
+                                    onValueChange={(itemValue) => handleFocusDurationChange(itemValue)}
+                                    style={{
+                                        marginLeft: 7,
+                                        color: colorScheme === 'dark' ? '#ffffff' : (
+                                            phaze === 'work'
+                                                ? '#471515'
+                                                : phaze === 'short_break'
+                                                    ? '#14401d'
+                                                    : '#153047'
+                                        )
+                                    }}
+                                    itemStyle={Platform.OS === 'ios' ? {
+                                        marginLeft: 7,
+                                        color: colorScheme === 'dark' ? '#ffffff' : (
+                                            phaze === 'work'
+                                                ? '#471515'
+                                                : phaze === 'short_break'
+                                                    ? '#14401d'
+                                                    : '#153047'
+                                        )
+                                    } : undefined}
+                                >
+                                    {QUICK_TIMES.map((time) => (
+                                        <Picker.Item
+                                            key={time.value}
+                                            label={time.label}
+                                            value={time.value}
+                                        />
+                                    ))}
+                                </Picker>
+                            </View>
+                        )}
+                    </View>
+                    <View className='mt-4'>
+                        <Text className={clsx(
+                            'text-xl font-medium', {
+                            'text-pink-primary': phaze === 'work',
+                            'text-green-primary': phaze === 'short_break',
+                            'text-blue-primary': phaze === 'long_break',
+                        }
+
+                        )}>Short break time:</Text>
+                        {!isLoading && (
+                            <View className={clsx(
+                                'border rounded-full mt-2 overflow-hidden',
+                                {
+                                    'border-pink-secondary bg-pink-secondary': phaze === 'work',
+                                    'border-green-secondary bg-green-secondary': phaze === 'short_break',
+                                    'border-blue-secondary bg-blue-secondary': phaze === 'long_break',
+                                }
+                            )}>
+
+                                <Picker
+                                    selectedValue={settingsObj.shortBreakDuration}
+                                    onValueChange={(itemValue) => handleShortBreakDurationChange(itemValue)}
+                                    style={{
+                                        marginLeft: 7,
+                                        color: colorScheme === 'dark' ? '#ffffff' : (
+                                            phaze === 'work'
+                                                ? '#471515'
+                                                : phaze === 'short_break'
+                                                    ? '#14401d'
+                                                    : '#153047'
+                                        )
+                                    }}
+                                    itemStyle={Platform.OS === 'ios' ? {
+                                        marginLeft: 7,
+                                        color: colorScheme === 'dark' ? '#ffffff' : (
+                                            phaze === 'work'
+                                                ? '#471515'
+                                                : phaze === 'short_break'
+                                                    ? '#14401d'
+                                                    : '#153047'
+                                        )
+                                    } : undefined}
+                                >
+                                    {QUICK_TIMES.map((time) => (
+                                        <Picker.Item
+                                            key={time.value}
+                                            label={time.label}
+                                            value={time.value}
+                                        />
+                                    ))}
+                                </Picker>
+                            </View>
+                        )}
+                    </View>
+                    <View className='mt-4'>
+                        <Text className={clsx(
+                            'text-xl font-medium', {
+                            'text-pink-primary': phaze === 'work',
+                            'text-green-primary': phaze === 'short_break',
+                            'text-blue-primary': phaze === 'long_break',
+                        }
+
+                        )}>Long break time:</Text>
+                        {!isLoading && (
+                            <View className={clsx(
+                                'border rounded-full mt-2 overflow-hidden',
+                                {
+                                    'border-pink-secondary bg-pink-secondary': phaze === 'work',
+                                    'border-green-secondary bg-green-secondary': phaze === 'short_break',
+                                    'border-blue-secondary bg-blue-secondary': phaze === 'long_break',
+                                }
+                            )}>
+
+                                <Picker
+                                    selectedValue={settingsObj.longBreakDuration}
+                                    onValueChange={(itemValue) => handleLongBreakDurationChange(itemValue)}
+                                    style={{
+                                        marginLeft: 7,
+                                        color: colorScheme === 'dark' ? '#ffffff' : (
+                                            phaze === 'work'
+                                                ? '#471515'
+                                                : phaze === 'short_break'
+                                                    ? '#14401d'
+                                                    : '#153047'
+                                        )
+                                    }}
+                                    itemStyle={Platform.OS === 'ios' ? {
+                                        marginLeft: 7,
+                                        color: colorScheme === 'dark' ? '#ffffff' : (
+                                            phaze === 'work'
+                                                ? '#471515'
+                                                : phaze === 'short_break'
+                                                    ? '#14401d'
+                                                    : '#153047'
+                                        )
+                                    } : undefined}
+                                >
+                                    {QUICK_TIMES.map((time) => (
+                                        <Picker.Item
+                                            key={time.value}
+                                            label={time.label}
+                                            value={time.value}
+                                        />
+                                    ))}
+                                </Picker>
+                            </View>
+                        )}
+                    </View>
+                </View>
+            </View >
         </>
     )
 }
