@@ -56,10 +56,14 @@ function CountdownTime({ settingsObj, pauseTrigger, step, scenario, isPaused, se
                     player3.play()
                 }
                 nextStep()
-                setTimeout(() => {
-                    setIsPaused(false)
-                }, 1000)
+                if (settingsObj.skip === 'Auto') {
+                    setTimeout(() => {
+                        setIsPaused(false)
+                    }, 1000)
+                }
             }
+
+            return () => clearInterval(timeCheckInterval)
         }, 1000)
 
         return () => clearInterval(timeCheckInterval)

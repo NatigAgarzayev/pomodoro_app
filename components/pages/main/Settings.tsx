@@ -356,7 +356,7 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
                                 phaze={phaze}
                                 className="mt-2"
                             >
-                                <SegmentItem value="Off">
+                                <SegmentItem value="Manual">
                                     <Text
                                         className={clsx(
                                             'text-lg font-bold',
@@ -368,7 +368,7 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
                                         Manual
                                     </Text>
                                 </SegmentItem>
-                                <SegmentItem value="On">
+                                <SegmentItem value="Auto">
                                     <Text
                                         className={clsx(
                                             'text-lg font-bold',
