@@ -14,7 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import { defaultSettings, SETTINGS_KEY, SettingsType } from '@/constants/SettingsConstants'
 import * as Haptics from 'expo-haptics'
 
-const btnPressSource = require('../assets/audio/btn_press.mp3')
+const btnPressSource = require('../assets/audio/btn_press_compressed.mp3')
 const lofiMusicSource = require('../assets/audio/lofi.mp3')
 
 const scenario = ['work', 'short_break', 'work', 'short_break', 'work', 'short_break', 'work', 'long_break']
@@ -29,9 +29,11 @@ export default function HomeScreen() {
     const colorScheme = useColorScheme()
     const player1 = useAudioPlayer(btnPressSource)
     const player2 = useAudioPlayer(lofiMusicSource)
-    const { didJustFinish, playing } = useAudioPlayerStatus(player2)
+    const { isLoaded } = useAudioPlayerStatus(player1)
+    const { didJustFinish, playing, isLoaded: isLoaded2 } = useAudioPlayerStatus(player2)
 
-
+    console.log("First audio isLoaded:", isLoaded)
+    console.log("Lofi audio isLoaded:", isLoaded2)
     useEffect(() => {
         loadSettings()
     }, [])
