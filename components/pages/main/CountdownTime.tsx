@@ -62,11 +62,11 @@ function CountdownTime({ settingsObj, pauseTrigger, step, scenario, isPaused, se
                     }, 1000)
                 }
             }
-
-            return () => clearInterval(timeCheckInterval)
         }, 1000)
 
-        return () => clearInterval(timeCheckInterval)
+        return () => {
+            clearInterval(timeCheckInterval)
+        }
 
     }, [step, scenario, timeLeft])
 
