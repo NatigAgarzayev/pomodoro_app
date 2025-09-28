@@ -12,6 +12,7 @@ import { Appearance, useColorScheme } from 'react-native'
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { defaultSettings, SETTINGS_KEY, SettingsType } from '@/constants/SettingsConstants'
+import * as Haptics from 'expo-haptics'
 
 const btnPressSource = require('../assets/audio/btn_press.mp3')
 const lofiMusicSource = require('../assets/audio/lofi.mp3')
@@ -30,36 +31,10 @@ export default function HomeScreen() {
     const player2 = useAudioPlayer(lofiMusicSource)
     const { didJustFinish, playing } = useAudioPlayerStatus(player2)
 
-    const loadSettings = async () => {
-        try {
-            const savedSettings = await AsyncStorage.getItem(SETTINGS_KEY)
-
-            if (savedSettings) {
-                const parsedSettings = JSON.parse(savedSettings)
-                setSettingsObj({ ...defaultSettings, ...parsedSettings })
-            }
-        } catch (error) {
-            console.error('Error loading settings:', error)
-            setSettingsObj(defaultSettings)
-        }
-    }
 
     useEffect(() => {
         loadSettings()
     }, [])
-
-    const stepChangeHandler = () => {
-        if (step < scenario.length) {
-            setStep(step + 1)
-        }
-        else {
-            setStep(1)
-        }
-        if (settingsObj.sound === 'On') {
-            player1.seekTo(0)
-            player1.play()
-        }
-    }
 
     useEffect(() => {
         Appearance.setColorScheme(colorScheme)
@@ -87,6 +62,33 @@ export default function HomeScreen() {
             player2.play()
         }
     }, [didJustFinish])
+
+    const loadSettings = async () => {
+        try {
+            const savedSettings = await AsyncStorage.getItem(SETTINGS_KEY)
+
+            if (savedSettings) {
+                const parsedSettings = JSON.parse(savedSettings)
+                setSettingsObj({ ...defaultSettings, ...parsedSettings })
+            }
+        } catch (error) {
+            console.error('Error loading settings:', error)
+            setSettingsObj(defaultSettings)
+        }
+    }
+
+    const stepChangeHandler = () => {
+        if (settingsObj.sound === 'On') {
+            player1.seekTo(0)
+            player1.play()
+        }
+        if (step < scenario.length) {
+            setStep(step + 1)
+        }
+        else {
+            setStep(1)
+        }
+    }
 
     return (
         <SafeAreaView className={clsx('h-full',

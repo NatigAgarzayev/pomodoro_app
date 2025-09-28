@@ -51,7 +51,7 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
     const segmentedControlWidth = windowWidth - 40;
     const itemWidth = (segmentedControlWidth - internalPadding) / children.length;
 
-    const selectedIndex = children.findIndex(child => child.props.value === selectedValue);
+    const selectedIndex = children.findIndex((child: any) => child.props.value === selectedValue);
 
     const rStyle = useAnimatedStyle(() => {
         return {

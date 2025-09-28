@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, useCallback } from 'react'
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg'
 import clsx from 'clsx'
 import { cssInterop } from 'nativewind'
@@ -10,6 +10,11 @@ import { QUICK_TIMES } from '@/constants/DurationConstants'
 import { Picker } from '@react-native-picker/picker'
 import { Platform } from 'react-native'
 import { defaultSettings, SETTINGS_KEY, SettingsType } from '@/constants/SettingsConstants'
+import Animated, {
+    useSharedValue,
+    useAnimatedStyle,
+    withTiming,
+} from 'react-native-reanimated'
 
 cssInterop(Svg, { className: 'style' })
 cssInterop(Path, {
@@ -22,16 +27,20 @@ cssInterop(Path, {
 export default function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any, settingsObj: SettingsType, setSettingsObj: (val: SettingsType) => void, phaze: string }) {
     const [openPanel, setOpenPanel] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
-    const [updateStates, setUpdateStates] = useState(false)
     const colorScheme = useColorScheme()
-
-    useEffect(() => {
-        setUpdateStates(!updateStates)
-    }, [settingsObj])
+    const isAnimating = useRef(false)
+    const translateX = useSharedValue(100)
 
     useEffect(() => {
         loadSettings()
     }, [])
+
+
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            transform: [{ translateX: `${translateX.value}%` }],
+        };
+    });
 
     const loadSettings = async () => {
         try {
@@ -92,10 +101,29 @@ export default function Settings({ sound2, settingsObj, setSettingsObj, phaze }:
         updateSettings('longBreakDuration', duration)
     }
 
+    const handleButtonPress = () => {
+        console.log('Button pressed, current openPanel:', openPanel);
+        isAnimating.current = true;
+
+        if (openPanel) {
+            translateX.value = withTiming(100, { duration: 300 }, (finished) => {
+                if (finished) isAnimating.current = false;
+            });
+            setOpenPanel(false);
+        } else {
+            translateX.value = withTiming(0, { duration: 300 }, (finished) => {
+                if (finished) isAnimating.current = false;
+            });
+            setOpenPanel(true);
+        }
+    };
+
+
+
     return (
         <>
             <Pressable
-                onPress={() => setOpenPanel(!openPanel)}
+                onPress={handleButtonPress}
                 className='absolute right-2 top-0 p-4 rounded-full'
             >
                 <Svg
@@ -112,17 +140,19 @@ export default function Settings({ sound2, settingsObj, setSettingsObj, phaze }:
                 </Svg>
             </Pressable>
 
-            <View className={clsx(
-                'shadow-lg w-full h-screen absolute top-0 z-50',
-                openPanel ? "right-0 visible" : "right-full invisible",
-                {
-                    'bg-pink-wall': phaze === 'work',
-                    'bg-green-wall': phaze === 'short_break',
-                    'bg-blue-wall': phaze === 'long_break',
-                }
-            )}>
+            <Animated.View
+                style={[animatedStyle]}
+                className={clsx(
+                    'shadow-lg w-full h-screen absolute top-0 z-50 right-0',
+                    {
+                        'bg-pink-wall': phaze === 'work',
+                        'bg-green-wall': phaze === 'short_break',
+                        'bg-blue-wall': phaze === 'long_break',
+                    }
+                )}
+            >
                 <View className='flex-row items-center gap-2 justify-start px-6 pt-6'>
-                    <Pressable onPress={() => setOpenPanel(false)}>
+                    <Pressable onPress={handleButtonPress}>
                         <Svg className={clsx({
                             'text-pink-primary': phaze === 'work',
                             'text-green-primary': phaze === 'short_break',
@@ -454,7 +484,7 @@ export default function Settings({ sound2, settingsObj, setSettingsObj, phaze }:
                         )}
                     </View>
                 </View>
-            </View >
+            </Animated.View >
         </>
     )
 }
