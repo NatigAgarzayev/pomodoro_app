@@ -159,7 +159,7 @@ export default function Settings({ sound2, settingsObj, setSettingsObj, phaze }:
                 )}
             >
                 <View className='flex-row items-center gap-2 justify-start px-6 pt-6'>
-                    <Pressable onPress={handleButtonPress}>
+                    <Pressable className='w-8' onPress={handleButtonPress}>
                         <Svg className={clsx({
                             'text-pink-primary': phaze === 'work',
                             'text-green-primary': phaze === 'short_break',

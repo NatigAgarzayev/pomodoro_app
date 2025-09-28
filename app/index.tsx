@@ -13,6 +13,7 @@ import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { defaultSettings, SETTINGS_KEY, SettingsType } from '@/constants/SettingsConstants'
 import * as Haptics from 'expo-haptics'
+import * as SplashScreen from 'expo-splash-screen'
 
 const btnPressSource = require('../assets/audio/btn_press_compressed.mp3')
 const lofiMusicSource = require('../assets/audio/lofi.mp3')
@@ -32,10 +33,9 @@ export default function HomeScreen() {
     const { isLoaded } = useAudioPlayerStatus(player1)
     const { didJustFinish, playing, isLoaded: isLoaded2 } = useAudioPlayerStatus(player2)
 
-    console.log("First audio isLoaded:", isLoaded)
-    console.log("Lofi audio isLoaded:", isLoaded2)
     useEffect(() => {
         loadSettings()
+        SplashScreen.hide()
     }, [])
 
     useEffect(() => {

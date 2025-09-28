@@ -17,7 +17,7 @@ interface CountdownTimeProps {
     nextStep: () => void,
 }
 
-export default function CountdownTime({ settingsObj, pauseTrigger, step, scenario, isPaused, setIsPaused, nextStep }: CountdownTimeProps) {
+function CountdownTime({ settingsObj, pauseTrigger, step, scenario, isPaused, setIsPaused, nextStep }: CountdownTimeProps) {
     const phaze = scenario[step]
     const transformedPhaze = phaze === 'work' ? 'focusDuration' : phaze === 'short_break' ? 'shortBreakDuration' : 'longBreakDuration'
     const [timeLeft, setTimeLeft] = useState<number>(Number(settingsObj[transformedPhaze]))
@@ -112,3 +112,6 @@ export default function CountdownTime({ settingsObj, pauseTrigger, step, scenari
         </View >
     )
 }
+
+// Export memoized component
+export default React.memo(CountdownTime)
