@@ -1,11 +1,11 @@
 {
   "expo": {
-    "scheme": "pomodoro_app",
+    "scheme": "pomodoro-app",
     "name": "Pomodoro",
     "slug": "pomodoro_app",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/splash.png",
+    "icon": "./assets/splashlightfixed.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
@@ -13,8 +13,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#232323"
+        "foregroundImage": "./assets/splashlightfixed.png",
+        "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -33,11 +33,11 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#fff",
-          "image": "./assets/splash.png",
+          "backgroundColor": "#ffffff",
+          "image": "./assets/splashlightfixed.png",
           "dark": {
-            "image": "./assets/splash.png",
-            "backgroundColor": "#232323"
+            "image": "./assets/splashdarkfixed.png",
+            "backgroundColor": "#000000"
           },
           "imageWidth": 200
         }

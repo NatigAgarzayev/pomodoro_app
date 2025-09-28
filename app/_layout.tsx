@@ -11,7 +11,6 @@ SplashScreen.setOptions({
 SplashScreen.preventAutoHideAsync()
 
 export default function RootLayout() {
-
     return (
         <Theme name="default">
             <Slot />

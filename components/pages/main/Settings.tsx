@@ -26,11 +26,12 @@ cssInterop(Path, {
     },
 })
 
-export default function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any, settingsObj: SettingsType, setSettingsObj: (val: SettingsType) => void, phaze: string }) {
+function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any, settingsObj: SettingsType, setSettingsObj: (val: SettingsType) => void, phaze: string }) {
     const [openPanel, setOpenPanel] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
+    const [isThemesDisabled, setIsThemeDisabled] = useState(false)
+    const [isSoundDisabled, setIsSoundDisabled] = useState(false)
     const colorScheme = useColorScheme()
-    const isAnimating = useRef(false)
     const translateX = useSharedValue(100)
 
     useEffect(() => {
@@ -54,7 +55,6 @@ export default function Settings({ sound2, settingsObj, setSettingsObj, phaze }:
                 setSettingsObj({ ...defaultSettings, ...parsedSettings })
             }
         } catch (error) {
-            console.error('Error loading settings:', error)
             setSettingsObj(defaultSettings)
         } finally {
             setIsLoading(false)
@@ -76,24 +76,39 @@ export default function Settings({ sound2, settingsObj, setSettingsObj, phaze }:
     }
 
     const handleThemeChange = (theme: string) => {
+        if (isThemesDisabled) return
+        setIsThemeDisabled(true)
+        setTimeout(() => {
+            setIsThemeDisabled(false)
+        }, 3000)
         Appearance.setColorScheme(theme.toLowerCase() as ColorSchemeName)
-        updateSettings('theme', theme as SettingsType['theme'])
+        updateSettings('theme', theme)
     }
 
     const handleLofiChange = (lofi: string) => {
+        if (isSoundDisabled) return
+        setIsSoundDisabled(true)
+        setTimeout(() => {
+            setIsSoundDisabled(false)
+        }, 3000)
         if (lofi === 'Off') {
             sound2.pause()
         }
-        updateSettings('lofi', lofi as SettingsType['lofi'])
+        updateSettings('lofi', lofi)
     }
 
     const handleSoundChange = (sound: string) => {
+        if (isSoundDisabled) return
+        setIsSoundDisabled(true)
+        setTimeout(() => {
+            setIsSoundDisabled(false)
+        }, 3000)
         if (sound === 'System') {
             Haptics.notificationAsync(
                 Haptics.NotificationFeedbackType.Success
             )
         }
-        updateSettings('sound', sound as SettingsType['sound'])
+        updateSettings('sound', sound)
     }
 
     const handleFocusDurationChange = (duration: number) => {
@@ -108,22 +123,19 @@ export default function Settings({ sound2, settingsObj, setSettingsObj, phaze }:
         updateSettings('longBreakDuration', duration)
     }
 
-    const handleButtonPress = () => {
-        console.log('Button pressed, current openPanel:', openPanel);
-        isAnimating.current = true;
+    const handleSkipHandler = (skip: string) => {
+        updateSettings('skip', skip)
+    }
 
+    const handleButtonPress = () => {
         if (openPanel) {
-            translateX.value = withTiming(100, { duration: 300 }, (finished) => {
-                if (finished) isAnimating.current = false;
-            });
+            translateX.value = withTiming(100, { duration: 300 });
             setOpenPanel(false);
         } else {
-            translateX.value = withTiming(0, { duration: 300 }, (finished) => {
-                if (finished) isAnimating.current = false;
-            });
+            translateX.value = withTiming(0, { duration: 300 });
             setOpenPanel(true);
         }
-    };
+    }
 
 
 
@@ -336,6 +348,50 @@ export default function Settings({ sound2, settingsObj, setSettingsObj, phaze }:
                             'text-blue-primary': phaze === 'long_break',
                         }
 
+                        )}>Skip steps:</Text>
+                        {!isLoading && (
+                            <SegmentedControl
+                                selectedValue={settingsObj.skip}
+                                onValueChange={handleSkipHandler}
+                                phaze={phaze}
+                                className="mt-2"
+                            >
+                                <SegmentItem value="Off">
+                                    <Text
+                                        className={clsx(
+                                            'text-lg font-bold',
+                                            {
+                                                'text-pink-primary': phaze === 'work',
+                                                'text-green-primary': phaze === 'short_break',
+                                                'text-blue-primary': phaze === 'long_break',
+                                            })}>
+                                        Manual
+                                    </Text>
+                                </SegmentItem>
+                                <SegmentItem value="On">
+                                    <Text
+                                        className={clsx(
+                                            'text-lg font-bold',
+                                            {
+                                                'text-pink-primary': phaze === 'work',
+                                                'text-green-primary': phaze === 'short_break',
+                                                'text-blue-primary': phaze === 'long_break',
+                                            })}>
+                                        Auto
+                                    </Text>
+                                </SegmentItem>
+                            </SegmentedControl>
+                        )}
+
+                    </View>
+                    <View className='mt-4'>
+                        <Text className={clsx(
+                            'text-xl font-medium', {
+                            'text-pink-primary': phaze === 'work',
+                            'text-green-primary': phaze === 'short_break',
+                            'text-blue-primary': phaze === 'long_break',
+                        }
+
                         )}>Focust time:</Text>
                         {!isLoading && (
                             <View className={clsx(
@@ -495,3 +551,5 @@ export default function Settings({ sound2, settingsObj, setSettingsObj, phaze }:
         </>
     )
 }
+
+export default React.memo(Settings)

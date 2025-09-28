@@ -33,6 +33,7 @@ export default function HomeScreen() {
     const { isLoaded } = useAudioPlayerStatus(player1)
     const { didJustFinish, playing, isLoaded: isLoaded2 } = useAudioPlayerStatus(player2)
 
+
     useEffect(() => {
         loadSettings()
         SplashScreen.hide()
@@ -81,7 +82,6 @@ export default function HomeScreen() {
                 setSettingsObj({ ...defaultSettings, ...parsedSettings })
             }
         } catch (error) {
-            console.error('Error loading settings:', error)
             setSettingsObj(defaultSettings)
         }
     }

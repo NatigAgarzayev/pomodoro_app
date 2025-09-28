@@ -56,6 +56,9 @@ function CountdownTime({ settingsObj, pauseTrigger, step, scenario, isPaused, se
                     player3.play()
                 }
                 nextStep()
+                setTimeout(() => {
+                    setIsPaused(false)
+                }, 1000)
             }
         }, 1000)
 
@@ -66,7 +69,7 @@ function CountdownTime({ settingsObj, pauseTrigger, step, scenario, isPaused, se
     useEffect(() => {
         setTimeLeft(settingsObj[transformedPhaze])
         setIsPaused(true)
-    }, [step, phaze, pauseTrigger])
+    }, [step, phaze, pauseTrigger, settingsObj])
 
     const formatTime = (totalSeconds: number) => {
         const minutes = Math.floor(totalSeconds / 60)
@@ -78,8 +81,6 @@ function CountdownTime({ settingsObj, pauseTrigger, step, scenario, isPaused, se
     }
 
     const { minutes, seconds } = formatTime(timeLeft)
-
-    console.log('Time Left:', timeLeft, 'Seconds:', seconds, 'Minutes:', minutes, 'Phaze:', phaze, 'IsPaused:', isPaused);
 
     return (
         <View>
