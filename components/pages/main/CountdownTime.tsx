@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react'
 import clsx from 'clsx'
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio'
 import { SettingsType } from '@/constants/SettingsConstants'
+import * as Haptics from 'expo-haptics'
 
 const endSound = require('../../../assets/audio/time_ended.mp3')
 
@@ -45,6 +46,11 @@ export default function CountdownTime({ settingsObj, pauseTrigger, step, scenari
         const timeCheckInterval = setInterval(() => {
             if (scenario[step] && settingsObj[transformedPhaze] === timeLeft) {
             } else if (timeLeft === 0) {
+                if (settingsObj.sound === "System") {
+                    Haptics.notificationAsync(
+                        Haptics.NotificationFeedbackType.Success
+                    )
+                }
                 if (settingsObj.sound === 'On') {
                     player3.seekTo(0)
                     player3.play()

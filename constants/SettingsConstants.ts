@@ -10,9 +10,9 @@ export type SettingsType = {
 export const SETTINGS_KEY = '@pomodoro_settings'
 
 export const defaultSettings: SettingsType = {
-    theme: 'System',
+    theme: 'Light',
     lofi: 'Off',
-    sound: 'On',
+    sound: 'System',
     focusDuration: 1500,
     shortBreakDuration: 300,
     longBreakDuration: 900,

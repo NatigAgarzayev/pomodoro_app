@@ -41,6 +41,13 @@ export default function HomeScreen() {
     }, [colorScheme])
 
     useEffect(() => {
+        if (settingsObj.sound === "System") {
+            Haptics.selectionAsync()
+        }
+        if (settingsObj.sound === 'On') {
+            player1.seekTo(0)
+            player1.play()
+        }
         if (settingsObj.lofi === 'Off') return
         if (!isPaused) {
             if (!musicHasStarted) {
@@ -78,6 +85,9 @@ export default function HomeScreen() {
     }
 
     const stepChangeHandler = () => {
+        if (settingsObj.sound === "System") {
+            Haptics.selectionAsync()
+        }
         if (settingsObj.sound === 'On') {
             player1.seekTo(0)
             player1.play()
