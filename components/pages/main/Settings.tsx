@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg'
 import clsx from 'clsx'
-import { cssInterop } from 'nativewind'
+import { cssInterop, useColorScheme } from 'nativewind'
 import { ColorSchemeName, Pressable, Text, View } from 'react-native'
 import { SegmentedControl, SegmentItem } from '@/components/ui/segment-control/SegmentControl'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { Appearance, useColorScheme } from 'react-native'
+import { Appearance } from 'react-native'
 import { QUICK_TIMES } from '@/constants/DurationConstants'
 import { Picker } from '@react-native-picker/picker'
 import { Platform } from 'react-native'
@@ -16,7 +16,7 @@ import Animated, {
     withTiming,
 } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
-
+import { useThemeStore } from '@/stores/themeStore'
 
 cssInterop(Svg, { className: 'style' })
 cssInterop(Path, {
@@ -29,10 +29,8 @@ cssInterop(Path, {
 function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any, settingsObj: SettingsType, setSettingsObj: (val: SettingsType) => void, phaze: string }) {
     const [openPanel, setOpenPanel] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
-    const [isThemesDisabled, setIsThemeDisabled] = useState(false)
-    const [isSoundDisabled, setIsSoundDisabled] = useState(false)
-    const colorScheme = useColorScheme()
     const translateX = useSharedValue(100)
+    const { theme } = useThemeStore(state => state)
 
     useEffect(() => {
         loadSettings()
@@ -76,21 +74,10 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
     }
 
     const handleThemeChange = (theme: string) => {
-        if (isThemesDisabled) return
-        setIsThemeDisabled(true)
-        setTimeout(() => {
-            setIsThemeDisabled(false)
-        }, 3000)
-        Appearance.setColorScheme(theme.toLowerCase() as ColorSchemeName)
         updateSettings('theme', theme)
     }
 
     const handleLofiChange = (lofi: string) => {
-        if (isSoundDisabled) return
-        setIsSoundDisabled(true)
-        setTimeout(() => {
-            setIsSoundDisabled(false)
-        }, 3000)
         if (lofi === 'Off') {
             sound2.pause()
         }
@@ -98,11 +85,6 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
     }
 
     const handleSoundChange = (sound: string) => {
-        if (isSoundDisabled) return
-        setIsSoundDisabled(true)
-        setTimeout(() => {
-            setIsSoundDisabled(false)
-        }, 3000)
         if (sound === 'System') {
             Haptics.notificationAsync(
                 Haptics.NotificationFeedbackType.Success
@@ -408,7 +390,7 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
                                     onValueChange={(itemValue) => handleFocusDurationChange(itemValue)}
                                     style={{
                                         marginLeft: 7,
-                                        color: colorScheme === 'dark' ? '#ffffff' : (
+                                        color: theme === 'dark' ? '#ffffff' : (
                                             phaze === 'work'
                                                 ? '#471515'
                                                 : phaze === 'short_break'
@@ -418,7 +400,7 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
                                     }}
                                     itemStyle={Platform.OS === 'ios' ? {
                                         marginLeft: 7,
-                                        color: colorScheme === 'dark' ? '#ffffff' : (
+                                        color: theme === 'dark' ? '#ffffff' : (
                                             phaze === 'work'
                                                 ? '#471515'
                                                 : phaze === 'short_break'
@@ -462,7 +444,7 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
                                     onValueChange={(itemValue) => handleShortBreakDurationChange(itemValue)}
                                     style={{
                                         marginLeft: 7,
-                                        color: colorScheme === 'dark' ? '#ffffff' : (
+                                        color: theme === 'dark' ? '#ffffff' : (
                                             phaze === 'work'
                                                 ? '#471515'
                                                 : phaze === 'short_break'
@@ -472,7 +454,7 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
                                     }}
                                     itemStyle={Platform.OS === 'ios' ? {
                                         marginLeft: 7,
-                                        color: colorScheme === 'dark' ? '#ffffff' : (
+                                        color: theme === 'dark' ? '#ffffff' : (
                                             phaze === 'work'
                                                 ? '#471515'
                                                 : phaze === 'short_break'
@@ -516,7 +498,7 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
                                     onValueChange={(itemValue) => handleLongBreakDurationChange(itemValue)}
                                     style={{
                                         marginLeft: 7,
-                                        color: colorScheme === 'dark' ? '#ffffff' : (
+                                        color: theme === 'dark' ? '#ffffff' : (
                                             phaze === 'work'
                                                 ? '#471515'
                                                 : phaze === 'short_break'
@@ -526,7 +508,7 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
                                     }}
                                     itemStyle={Platform.OS === 'ios' ? {
                                         marginLeft: 7,
-                                        color: colorScheme === 'dark' ? '#ffffff' : (
+                                        color: theme === 'dark' ? '#ffffff' : (
                                             phaze === 'work'
                                                 ? '#471515'
                                                 : phaze === 'short_break'

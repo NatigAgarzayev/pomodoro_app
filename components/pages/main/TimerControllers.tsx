@@ -3,7 +3,7 @@ import React, { useState } from 'react'
 import Svg, { Circle, Rect, Path, G } from 'react-native-svg'
 import clsx from 'clsx'
 import { cssInterop } from 'nativewind'
-
+import * as Haptics from 'expo-haptics'
 
 cssInterop(Svg, { className: 'style' });
 cssInterop(Path, {
@@ -28,6 +28,7 @@ export default function TimerControllers({ pauseTrigger, setPauseTrigger, phaze,
     const handleNextStep = () => {
         nextStep()
         setIsDisabled(true)
+        Haptics.selectionAsync()
         setTimeout(() => setIsDisabled(false), 1000)
     }
 

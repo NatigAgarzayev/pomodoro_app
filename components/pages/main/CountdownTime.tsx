@@ -46,7 +46,7 @@ function CountdownTime({ settingsObj, pauseTrigger, step, scenario, isPaused, se
         const timeCheckInterval = setInterval(() => {
             if (scenario[step] && settingsObj[transformedPhaze] === timeLeft) {
             } else if (timeLeft === 0) {
-                if (settingsObj.sound === "System") {
+                if (settingsObj.sound === 'System') {
                     Haptics.notificationAsync(
                         Haptics.NotificationFeedbackType.Success
                     )

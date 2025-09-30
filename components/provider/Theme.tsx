@@ -1,9 +1,9 @@
-import { View } from 'react-native'
-import React, { useEffect } from 'react'
+import { Button, Pressable, Text, View } from 'react-native'
+import React, { useEffect, useState } from 'react'
 import { useColorScheme, vars } from 'nativewind'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-
-const SETTINGS_KEY = '@pomodoro_settings'
+import { SETTINGS_KEY } from '@/constants/SettingsConstants'
+import { useThemeStore } from '@/stores/themeStore'
 
 const themes: any = {
     default: {
@@ -47,26 +47,36 @@ const themes: any = {
 }
 
 export default function Theme({ name, children }: { name: string, children: React.ReactNode }) {
-    const { colorScheme, setColorScheme } = useColorScheme()
+    const { setColorScheme } = useColorScheme()
+    const [themeLoaded, setThemeLoaded] = useState(false)
+    const { theme, setTheme } = useThemeStore(state => state)
 
     useEffect(() => {
+        const loadTheme = async () => {
+            try {
+                const savedSettings = await AsyncStorage.getItem(SETTINGS_KEY)
+                let selectedTheme: 'light' | 'dark' = 'light'
+
+                if (savedSettings) {
+                    const parsed = JSON.parse(savedSettings)
+                    if (parsed.theme) {
+                        selectedTheme = parsed.theme.toLowerCase() === 'dark' ? 'dark' : 'light'
+                    }
+                }
+                setTheme(selectedTheme)
+            } catch (e) {
+                console.error(e)
+            } finally {
+                setThemeLoaded(true)
+            }
+        }
+
         loadTheme()
     }, [])
 
-    const loadTheme = async () => {
-        try {
-            const savedSettings = await AsyncStorage.getItem(SETTINGS_KEY)
-
-            if (savedSettings) {
-                const parsedSettings = JSON.parse(savedSettings)
-                setColorScheme(parsedSettings.theme.toLowerCase() || 'light')
-            }
-        } catch (error) {
-            console.error('Error loading theme:', error)
-        }
-    }
+    if (!themeLoaded) return null
     return (
-        <View style={themes[name][colorScheme ?? "light"]}>
+        <View style={themes[name][theme ?? 'light']}>
             {children}
         </View>
     )

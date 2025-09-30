@@ -8,10 +8,14 @@ import StepsCounter from '@/components/pages/main/StepsCounter'
 import CountdownTime from '@/components/pages/main/CountdownTime'
 import TimerControllers from '@/components/pages/main/TimerControllers'
 import Settings from '@/components/pages/main/Settings'
-import { Appearance, useColorScheme } from 'react-native'
+import { Appearance } from 'react-native'
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { defaultSettings, SETTINGS_KEY, SettingsType } from '@/constants/SettingsConstants'
+import { useColorScheme } from 'nativewind'
+import * as Haptics from 'expo-haptics'
+import { useThemeStore } from '@/stores/themeStore'
+
 
 const btnPressSource = require('../assets/audio/btn_press.mp3')
 const lofiMusicSource = require('../assets/audio/lofi.mp3')
@@ -19,32 +23,34 @@ const lofiMusicSource = require('../assets/audio/lofi.mp3')
 const scenario = ['work', 'short_break', 'work', 'short_break', 'work', 'short_break', 'work', 'long_break']
 
 export default function HomeScreen() {
+    const systemTheme = Appearance.getColorScheme()
     const [step, setStep] = useState<number>(1)
     const [isPaused, setIsPaused] = useState<boolean>(true)
     const [pauseTrigger, setPauseTrigger] = useState<boolean>(false)
     const [settingsObj, setSettingsObj] = useState<SettingsType>(defaultSettings)
     const [musicHasStarted, setMusicHasStarted] = useState(false)
     const phaze = scenario[step - 1]
-    const colorScheme = useColorScheme()
+    const { colorScheme, setColorScheme } = useColorScheme()
     const player1 = useAudioPlayer(btnPressSource)
     const player2 = useAudioPlayer(lofiMusicSource)
     const { didJustFinish, playing } = useAudioPlayerStatus(player2)
-
-    const loadSettings = async () => {
-        try {
-            const savedSettings = await AsyncStorage.getItem(SETTINGS_KEY)
-
-            if (savedSettings) {
-                const parsedSettings = JSON.parse(savedSettings)
-                setSettingsObj({ ...defaultSettings, ...parsedSettings })
-            }
-        } catch (error) {
-            console.error('Error loading settings:', error)
-            setSettingsObj(defaultSettings)
-        }
-    }
+    const { setTheme } = useThemeStore(state => state)
 
     useEffect(() => {
+        const loadSettings = async () => {
+            try {
+                const saved = await AsyncStorage.getItem(SETTINGS_KEY)
+                if (saved) {
+                    const parsed = JSON.parse(saved)
+                    setSettingsObj({ ...defaultSettings, ...parsed })
+
+                } else {
+                    setSettingsObj(defaultSettings)
+                }
+            } catch {
+                setSettingsObj(defaultSettings)
+            }
+        }
         loadSettings()
     }, [])
 
@@ -62,10 +68,18 @@ export default function HomeScreen() {
     }
 
     useEffect(() => {
-        Appearance.setColorScheme(colorScheme)
-    }, [colorScheme])
+        if (!settingsObj) return
+        if (settingsObj.theme === 'System') {
+            setTheme(systemTheme || 'light')
+        } else {
+            setTheme(settingsObj.theme.toLowerCase() as 'light' | 'dark')
+        }
+    }, [settingsObj, systemTheme])
 
     useEffect(() => {
+        if (settingsObj.sound === 'System') {
+            Haptics.selectionAsync()
+        }
         if (settingsObj.lofi === 'Off') return
         if (!isPaused) {
             if (!musicHasStarted) {
@@ -89,7 +103,7 @@ export default function HomeScreen() {
     }, [didJustFinish])
 
     return (
-        <SafeAreaView className={clsx('h-full',
+        <SafeAreaView key={colorScheme} className={clsx('h-full',
             {
                 'bg-pink-wall': scenario[step - 1] === 'work',
                 'bg-green-wall': scenario[step - 1] === 'short_break',
