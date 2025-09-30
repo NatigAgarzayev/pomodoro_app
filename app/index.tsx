@@ -12,10 +12,8 @@ import { Appearance, useColorScheme } from 'react-native'
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { defaultSettings, SETTINGS_KEY, SettingsType } from '@/constants/SettingsConstants'
-import * as Haptics from 'expo-haptics'
-import * as SplashScreen from 'expo-splash-screen'
 
-const btnPressSource = require('../assets/audio/btn_press_compressed.mp3')
+const btnPressSource = require('../assets/audio/btn_press.mp3')
 const lofiMusicSource = require('../assets/audio/lofi.mp3')
 
 const scenario = ['work', 'short_break', 'work', 'short_break', 'work', 'short_break', 'work', 'long_break']
@@ -30,27 +28,44 @@ export default function HomeScreen() {
     const colorScheme = useColorScheme()
     const player1 = useAudioPlayer(btnPressSource)
     const player2 = useAudioPlayer(lofiMusicSource)
-    const { isLoaded } = useAudioPlayerStatus(player1)
-    const { didJustFinish, playing, isLoaded: isLoaded2 } = useAudioPlayerStatus(player2)
+    const { didJustFinish, playing } = useAudioPlayerStatus(player2)
 
+    const loadSettings = async () => {
+        try {
+            const savedSettings = await AsyncStorage.getItem(SETTINGS_KEY)
+
+            if (savedSettings) {
+                const parsedSettings = JSON.parse(savedSettings)
+                setSettingsObj({ ...defaultSettings, ...parsedSettings })
+            }
+        } catch (error) {
+            console.error('Error loading settings:', error)
+            setSettingsObj(defaultSettings)
+        }
+    }
 
     useEffect(() => {
         loadSettings()
-        SplashScreen.hide()
     }, [])
+
+    const stepChangeHandler = () => {
+        if (step < scenario.length) {
+            setStep(step + 1)
+        }
+        else {
+            setStep(1)
+        }
+        if (settingsObj.sound === 'On') {
+            player1.seekTo(0)
+            player1.play()
+        }
+    }
 
     useEffect(() => {
         Appearance.setColorScheme(colorScheme)
     }, [colorScheme])
 
     useEffect(() => {
-        if (settingsObj.sound === "System") {
-            Haptics.selectionAsync()
-        }
-        if (settingsObj.sound === 'On') {
-            player1.seekTo(0)
-            player1.play()
-        }
         if (settingsObj.lofi === 'Off') return
         if (!isPaused) {
             if (!musicHasStarted) {
@@ -72,35 +87,6 @@ export default function HomeScreen() {
             player2.play()
         }
     }, [didJustFinish])
-
-    const loadSettings = async () => {
-        try {
-            const savedSettings = await AsyncStorage.getItem(SETTINGS_KEY)
-
-            if (savedSettings) {
-                const parsedSettings = JSON.parse(savedSettings)
-                setSettingsObj({ ...defaultSettings, ...parsedSettings })
-            }
-        } catch (error) {
-            setSettingsObj(defaultSettings)
-        }
-    }
-
-    const stepChangeHandler = () => {
-        if (settingsObj.sound === "System") {
-            Haptics.selectionAsync()
-        }
-        if (settingsObj.sound === 'On') {
-            player1.seekTo(0)
-            player1.play()
-        }
-        if (step < scenario.length) {
-            setStep(step + 1)
-        }
-        else {
-            setStep(1)
-        }
-    }
 
     return (
         <SafeAreaView className={clsx('h-full',
