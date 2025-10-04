@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react'
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg'
 import clsx from 'clsx'
 import { cssInterop, useColorScheme } from 'nativewind'
-import { ColorSchemeName, Pressable, Text, View } from 'react-native'
+import { Alert, BackHandler, ColorSchemeName, Pressable, Text, View } from 'react-native'
 import { SegmentedControl, SegmentItem } from '@/components/ui/segment-control/SegmentControl'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Appearance } from 'react-native'
@@ -32,6 +32,20 @@ function Settings({ sound2, phaze }: { sound2: any, phaze: string }) {
     const translateX = useSharedValue(100)
     const { theme } = useThemeStore(state => state)
     const { settings, updateSetting } = useSettingsStore()
+
+    useEffect(() => {
+        const backAction = () => {
+            handleButtonPress()
+            return true;
+        };
+
+        const backHandler = BackHandler.addEventListener(
+            'hardwareBackPress',
+            backAction,
+        );
+
+        return () => backHandler.remove();
+    }, []);
 
     const animatedStyle = useAnimatedStyle(() => {
         return {
@@ -85,7 +99,6 @@ function Settings({ sound2, phaze }: { sound2: any, phaze: string }) {
         }
     }
 
-    // Use settings from the store instead of props
     const currentSettings = settings
 
     return (
