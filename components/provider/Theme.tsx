@@ -1,9 +1,9 @@
 import { Button, Pressable, Text, View } from 'react-native'
 import React, { useEffect, useState } from 'react'
-import { useColorScheme, vars } from 'nativewind'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { SETTINGS_KEY } from '@/constants/SettingsConstants'
+import { vars } from 'nativewind'
+import { useColorScheme } from 'react-native'
 import { useThemeStore } from '@/stores/themeStore'
+import { useSettingsStore } from '@/stores/settingsStore'
 
 const themes: any = {
     default: {
@@ -47,20 +47,25 @@ const themes: any = {
 }
 
 export default function Theme({ name, children }: { name: string, children: React.ReactNode }) {
-    const { setColorScheme } = useColorScheme()
+    const { settings } = useSettingsStore()
+    const systemColorScheme = useColorScheme()
     const [themeLoaded, setThemeLoaded] = useState(false)
     const { theme, setTheme } = useThemeStore(state => state)
+
+    console.log('settings in Theme:', systemColorScheme)
 
     useEffect(() => {
         const loadTheme = async () => {
             try {
-                const savedSettings = await AsyncStorage.getItem(SETTINGS_KEY)
                 let selectedTheme: 'light' | 'dark' = 'light'
 
-                if (savedSettings) {
-                    const parsed = JSON.parse(savedSettings)
-                    if (parsed.theme) {
-                        selectedTheme = parsed.theme.toLowerCase() === 'dark' ? 'dark' : 'light'
+                if (settings) {
+                    if (settings.theme === 'System') {
+                        selectedTheme = systemColorScheme === 'dark' ? 'dark' : 'light'
+                    } else if (settings.theme === 'Dark') {
+                        selectedTheme = 'dark'
+                    } else if (settings.theme === 'Light') {
+                        selectedTheme = 'light'
                     }
                 }
                 setTheme(selectedTheme)
@@ -72,7 +77,7 @@ export default function Theme({ name, children }: { name: string, children: Reac
         }
 
         loadTheme()
-    }, [])
+    }, [settings.theme, systemColorScheme]) // ← Add systemColorScheme as dependency
 
     if (!themeLoaded) return null
     return (
