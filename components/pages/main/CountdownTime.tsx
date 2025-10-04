@@ -26,8 +26,7 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
 
     useEffect(() => {
         setTimeLeft(Number(settingsObj[transformedPhaze]))
-        setIsPaused(true)
-    }, [settingsObj.focusDuration, settingsObj.shortBreakDuration, settingsObj.longBreakDuration])
+    }, [settingsObj.focusDuration, settingsObj.shortBreakDuration, settingsObj.longBreakDuration, transformedPhaze])
 
     useEffect(() => {
         let interval: any = null
@@ -74,7 +73,7 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
     useEffect(() => {
         setTimeLeft(settingsObj[transformedPhaze])
         setIsPaused(true)
-    }, [step, phaze, pauseTrigger, settingsObj])
+    }, [step, phaze, pauseTrigger])
 
     const formatTime = (totalSeconds: number) => {
         const minutes = Math.floor(totalSeconds / 60)
