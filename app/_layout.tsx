@@ -23,11 +23,9 @@ Sentry.init({
     // spotlight: __DEV__,
 });
 SplashScreen.setOptions({
-    duration: 2000,
+    duration: 3000,
     fade: true,
 })
-
-SplashScreen.preventAutoHideAsync()
 
 export default Sentry.wrap(function RootLayout() {
     return (
