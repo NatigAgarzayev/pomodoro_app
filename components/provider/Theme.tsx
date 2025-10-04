@@ -52,8 +52,6 @@ export default function Theme({ name, children }: { name: string, children: Reac
     const [themeLoaded, setThemeLoaded] = useState(false)
     const { theme, setTheme } = useThemeStore(state => state)
 
-    console.log('settings in Theme:', systemColorScheme)
-
     useEffect(() => {
         const loadTheme = async () => {
             try {
