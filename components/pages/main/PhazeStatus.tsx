@@ -4,7 +4,7 @@ import clsx from 'clsx'
 import Svg, { Circle, Rect, Path } from 'react-native-svg'
 import { cssInterop } from 'nativewind'
 
-cssInterop(Svg, { className: 'style' });
+cssInterop(Svg, { className: 'style' })
 cssInterop(Path, {
     className: {
         target: true,

@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import { Slot } from 'expo-router'
 import Theme from '@/components/provider/Theme'
 import * as SplashScreen from 'expo-splash-screen'
-import * as Sentry from '@sentry/react-native';
+import * as Sentry from '@sentry/react-native'
 
 Sentry.init({
     dsn: 'https://554c3b4802f3262ed0bc6fd88f5366ad@o4510098384945152.ingest.de.sentry.io/4510098386321488',
@@ -21,7 +21,7 @@ Sentry.init({
 
     // uncomment the line below to enable Spotlight (https://spotlightjs.com)
     // spotlight: __DEV__,
-});
+})
 SplashScreen.setOptions({
     duration: 3000,
     fade: true,
@@ -33,4 +33,4 @@ export default Sentry.wrap(function RootLayout() {
             <Slot />
         </Theme>
     )
-});
+})

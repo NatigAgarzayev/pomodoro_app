@@ -5,7 +5,7 @@ import clsx from 'clsx'
 import { cssInterop } from 'nativewind'
 import * as Haptics from 'expo-haptics'
 
-cssInterop(Svg, { className: 'style' });
+cssInterop(Svg, { className: 'style' })
 cssInterop(Path, {
     className: {
         target: true,

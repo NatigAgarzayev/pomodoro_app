@@ -1,15 +1,13 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg'
 import clsx from 'clsx'
-import { cssInterop, useColorScheme } from 'nativewind'
-import { Alert, BackHandler, ColorSchemeName, Pressable, Text, View } from 'react-native'
+import { cssInterop } from 'nativewind'
+import { Alert, BackHandler, ToastAndroid, Pressable, Text, View } from 'react-native'
 import { SegmentedControl, SegmentItem } from '@/components/ui/segment-control/SegmentControl'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { Appearance } from 'react-native'
 import { QUICK_TIMES } from '@/constants/DurationConstants'
 import { Picker } from '@react-native-picker/picker'
 import { Platform } from 'react-native'
-import { defaultSettings, SETTINGS_KEY, SettingsType } from '@/constants/SettingsConstants'
+import { SettingsType } from '@/constants/SettingsConstants'
 import Animated, {
     useSharedValue,
     useAnimatedStyle,
@@ -18,6 +16,7 @@ import Animated, {
 import * as Haptics from 'expo-haptics'
 import { useThemeStore } from '@/stores/themeStore'
 import { useSettingsStore } from '@/stores/settingsStore'
+import { useDoubleBackExit } from '@/hooks/useDoubleBackExit'
 
 cssInterop(Svg, { className: 'style' })
 cssInterop(Path, {
@@ -32,26 +31,41 @@ function Settings({ sound2, phaze }: { sound2: any, phaze: string }) {
     const translateX = useSharedValue(100)
     const { theme } = useThemeStore(state => state)
     const { settings, updateSetting } = useSettingsStore()
+    const handleDoubleBackExit = useDoubleBackExit()
+
+    const handleButtonPress = () => {
+        if (openPanel) {
+            translateX.value = withTiming(100, { duration: 300 })
+            setOpenPanel(false)
+        } else {
+            translateX.value = withTiming(0, { duration: 300 })
+            setOpenPanel(true)
+        }
+    }
 
     useEffect(() => {
         const backAction = () => {
-            handleButtonPress()
-            return true;
-        };
+            if (openPanel) {
+                handleButtonPress()
+            } else {
+                handleDoubleBackExit()
+            }
+            return true
+        }
 
         const backHandler = BackHandler.addEventListener(
             'hardwareBackPress',
             backAction,
-        );
+        )
 
-        return () => backHandler.remove();
-    }, []);
+        return () => backHandler.remove()
+    }, [handleButtonPress, handleDoubleBackExit, openPanel])
 
     const animatedStyle = useAnimatedStyle(() => {
         return {
             transform: [{ translateX: `${translateX.value}%` }],
-        };
-    });
+        }
+    })
 
     const handleThemeChange = (theme: string) => {
         updateSetting('theme', theme as SettingsType['theme'])
@@ -89,15 +103,6 @@ function Settings({ sound2, phaze }: { sound2: any, phaze: string }) {
         updateSetting('skip', skip as SettingsType['skip'])
     }
 
-    const handleButtonPress = () => {
-        if (openPanel) {
-            translateX.value = withTiming(100, { duration: 300 });
-            setOpenPanel(false);
-        } else {
-            translateX.value = withTiming(0, { duration: 300 });
-            setOpenPanel(true);
-        }
-    }
 
     const currentSettings = settings
 
