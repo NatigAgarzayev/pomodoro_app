@@ -17,6 +17,7 @@ import Animated, {
 } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
 import { useThemeStore } from '@/stores/themeStore'
+import { useSettingsStore } from '@/stores/settingsStore'
 
 cssInterop(Svg, { className: 'style' })
 cssInterop(Path, {
@@ -26,16 +27,11 @@ cssInterop(Path, {
     },
 })
 
-function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any, settingsObj: SettingsType, setSettingsObj: (val: SettingsType) => void, phaze: string }) {
+function Settings({ sound2, phaze }: { sound2: any, phaze: string }) {
     const [openPanel, setOpenPanel] = useState(false)
-    const [isLoading, setIsLoading] = useState(true)
     const translateX = useSharedValue(100)
     const { theme } = useThemeStore(state => state)
-
-    useEffect(() => {
-        loadSettings()
-    }, [])
-
+    const { settings, updateSetting } = useSettingsStore()
 
     const animatedStyle = useAnimatedStyle(() => {
         return {
@@ -43,45 +39,15 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
         };
     });
 
-    const loadSettings = async () => {
-        try {
-            setIsLoading(true)
-            const savedSettings = await AsyncStorage.getItem(SETTINGS_KEY)
-
-            if (savedSettings) {
-                const parsedSettings = JSON.parse(savedSettings)
-                setSettingsObj({ ...defaultSettings, ...parsedSettings })
-            }
-        } catch (error) {
-            setSettingsObj(defaultSettings)
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
-    const saveSettings = async (newSettings: SettingsType) => {
-        try {
-            await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(newSettings))
-        } catch (error) {
-            console.error('Error saving settings:', error)
-        }
-    }
-
-    const updateSettings = (key: keyof SettingsType, value: any) => {
-        const newSettings = { ...settingsObj, [key]: value }
-        setSettingsObj(newSettings)
-        saveSettings(newSettings)
-    }
-
     const handleThemeChange = (theme: string) => {
-        updateSettings('theme', theme)
+        updateSetting('theme', theme as SettingsType['theme'])
     }
 
     const handleLofiChange = (lofi: string) => {
         if (lofi === 'Off') {
             sound2.pause()
         }
-        updateSettings('lofi', lofi)
+        updateSetting('lofi', lofi as SettingsType['lofi'])
     }
 
     const handleSoundChange = (sound: string) => {
@@ -90,23 +56,23 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
                 Haptics.NotificationFeedbackType.Success
             )
         }
-        updateSettings('sound', sound)
+        updateSetting('sound', sound as SettingsType['sound'])
     }
 
     const handleFocusDurationChange = (duration: number) => {
-        updateSettings('focusDuration', duration)
+        updateSetting('focusDuration', duration)
     }
 
     const handleShortBreakDurationChange = (duration: number) => {
-        updateSettings('shortBreakDuration', duration)
+        updateSetting('shortBreakDuration', duration)
     }
 
     const handleLongBreakDurationChange = (duration: number) => {
-        updateSettings('longBreakDuration', duration)
+        updateSetting('longBreakDuration', duration)
     }
 
     const handleSkipHandler = (skip: string) => {
-        updateSettings('skip', skip)
+        updateSetting('skip', skip as SettingsType['skip'])
     }
 
     const handleButtonPress = () => {
@@ -119,7 +85,8 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
         }
     }
 
-
+    // Use settings from the store instead of props
+    const currentSettings = settings
 
     return (
         <>
@@ -182,48 +149,45 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
                         }
 
                         )}>Theme:</Text>
-                        {!isLoading && (
-                            <SegmentedControl
-                                selectedValue={settingsObj.theme}
-                                onValueChange={handleThemeChange}
-                                phaze={phaze}
-                                className="mt-2"
-                            >
-                                <SegmentItem value="System">
-                                    <Svg
-                                        className={clsx({
-                                            'text-pink-primary': phaze === 'work',
-                                            'text-green-primary': phaze === 'short_break',
-                                            'text-blue-primary': phaze === 'long_break',
-                                        })}
-                                        width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><Rect stroke="currentColor" width="14" height="20" x="5" y="2" rx="2" ry="2" /><Path stroke="currentColor" d="M12 18h.01" />
-                                    </Svg>
-                                </SegmentItem>
-                                <SegmentItem value="Light">
-                                    <Svg
-                                        className={clsx({
-                                            'text-pink-primary': phaze === 'work',
-                                            'text-green-primary': phaze === 'short_break',
-                                            'text-blue-primary': phaze === 'long_break',
-                                        })}
-                                        width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <Circle stroke="currentColor" cx="12" cy="12" r="4" /><Path stroke="currentColor" d="M12 2v2" /><Path stroke="currentColor" d="M12 20v2" /><Path stroke="currentColor" d="m4.93 4.93 1.41 1.41" /><Path stroke="currentColor" d="m17.66 17.66 1.41 1.41" /><Path stroke="currentColor" d="M2 12h2" /><Path stroke="currentColor" d="M20 12h2" /><Path stroke="currentColor" d="m6.34 17.66-1.41 1.41" /><Path stroke="currentColor" d="m19.07 4.93-1.41 1.41" />
-                                    </Svg>
-                                </SegmentItem>
-                                <SegmentItem value="Dark">
-                                    <Svg
-                                        className={clsx({
-                                            'text-pink-primary dark:text-white': phaze === 'work',
-                                            'text-green-primary': phaze === 'short_break',
-                                            'text-blue-primary': phaze === 'long_break',
-                                        })}
-                                        width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <Path stroke="currentColor" d="M18 5h4" /><Path stroke="currentColor" d="M20 3v4" /><Path stroke="currentColor" d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" />
-                                    </Svg>
-                                </SegmentItem>
-                            </SegmentedControl>
-                        )}
-
+                        <SegmentedControl
+                            selectedValue={currentSettings.theme}
+                            onValueChange={handleThemeChange}
+                            phaze={phaze}
+                            className="mt-2"
+                        >
+                            <SegmentItem value="System">
+                                <Svg
+                                    className={clsx({
+                                        'text-pink-primary': phaze === 'work',
+                                        'text-green-primary': phaze === 'short_break',
+                                        'text-blue-primary': phaze === 'long_break',
+                                    })}
+                                    width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><Rect stroke="currentColor" width="14" height="20" x="5" y="2" rx="2" ry="2" /><Path stroke="currentColor" d="M12 18h.01" />
+                                </Svg>
+                            </SegmentItem>
+                            <SegmentItem value="Light">
+                                <Svg
+                                    className={clsx({
+                                        'text-pink-primary': phaze === 'work',
+                                        'text-green-primary': phaze === 'short_break',
+                                        'text-blue-primary': phaze === 'long_break',
+                                    })}
+                                    width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <Circle stroke="currentColor" cx="12" cy="12" r="4" /><Path stroke="currentColor" d="M12 2v2" /><Path stroke="currentColor" d="M12 20v2" /><Path stroke="currentColor" d="m4.93 4.93 1.41 1.41" /><Path stroke="currentColor" d="m17.66 17.66 1.41 1.41" /><Path stroke="currentColor" d="M2 12h2" /><Path stroke="currentColor" d="M20 12h2" /><Path stroke="currentColor" d="m6.34 17.66-1.41 1.41" /><Path stroke="currentColor" d="m19.07 4.93-1.41 1.41" />
+                                </Svg>
+                            </SegmentItem>
+                            <SegmentItem value="Dark">
+                                <Svg
+                                    className={clsx({
+                                        'text-pink-primary dark:text-white': phaze === 'work',
+                                        'text-green-primary': phaze === 'short_break',
+                                        'text-blue-primary': phaze === 'long_break',
+                                    })}
+                                    width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <Path stroke="currentColor" d="M18 5h4" /><Path stroke="currentColor" d="M20 3v4" /><Path stroke="currentColor" d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401" />
+                                </Svg>
+                            </SegmentItem>
+                        </SegmentedControl>
                     </View>
 
                     <View className='mt-4'>
@@ -235,38 +199,35 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
                         }
 
                         )}>Lo-Fi:</Text>
-                        {!isLoading && (
-                            <SegmentedControl
-                                selectedValue={settingsObj.lofi}
-                                onValueChange={handleLofiChange}
-                                phaze={phaze}
-                                className="mt-2"
-                            >
-                                <SegmentItem value="Off">
-                                    <Svg
-                                        className={clsx({
-                                            'text-pink-primary': phaze === 'work',
-                                            'text-green-primary': phaze === 'short_break',
-                                            'text-blue-primary': phaze === 'long_break',
-                                        })}
-                                        width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <Path stroke="currentColor" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /><Line stroke="currentColor" x1="22" x2="16" y1="9" y2="15" /><Line stroke="currentColor" x1="16" x2="22" y1="9" y2="15" />
-                                    </Svg>
-                                </SegmentItem>
-                                <SegmentItem value="On">
-                                    <Svg
-                                        className={clsx({
-                                            'text-pink-primary': phaze === 'work',
-                                            'text-green-primary': phaze === 'short_break',
-                                            'text-blue-primary': phaze === 'long_break',
-                                        })}
-                                        width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <Path stroke="currentColor" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /><Path stroke="currentColor" d="M16 9a5 5 0 0 1 0 6" /><Path stroke="currentColor" d="M19.364 18.364a9 9 0 0 0 0-12.728" />
-                                    </Svg>
-                                </SegmentItem>
-                            </SegmentedControl>
-                        )}
-
+                        <SegmentedControl
+                            selectedValue={currentSettings.lofi}
+                            onValueChange={handleLofiChange}
+                            phaze={phaze}
+                            className="mt-2"
+                        >
+                            <SegmentItem value="Off">
+                                <Svg
+                                    className={clsx({
+                                        'text-pink-primary': phaze === 'work',
+                                        'text-green-primary': phaze === 'short_break',
+                                        'text-blue-primary': phaze === 'long_break',
+                                    })}
+                                    width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <Path stroke="currentColor" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /><Line stroke="currentColor" x1="22" x2="16" y1="9" y2="15" /><Line stroke="currentColor" x1="16" x2="22" y1="9" y2="15" />
+                                </Svg>
+                            </SegmentItem>
+                            <SegmentItem value="On">
+                                <Svg
+                                    className={clsx({
+                                        'text-pink-primary': phaze === 'work',
+                                        'text-green-primary': phaze === 'short_break',
+                                        'text-blue-primary': phaze === 'long_break',
+                                    })}
+                                    width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <Path stroke="currentColor" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /><Path stroke="currentColor" d="M16 9a5 5 0 0 1 0 6" /><Path stroke="currentColor" d="M19.364 18.364a9 9 0 0 0 0-12.728" />
+                                </Svg>
+                            </SegmentItem>
+                        </SegmentedControl>
                     </View>
 
                     <View className='mt-4'>
@@ -278,36 +239,35 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
                         }
 
                         )}>Sound:</Text>
-                        {!isLoading && (
-                            <SegmentedControl
-                                selectedValue={settingsObj.sound}
-                                onValueChange={handleSoundChange}
-                                phaze={phaze}
-                                className="mt-2"
-                            >
-                                <SegmentItem value="System">
-                                    <Svg
-                                        className={clsx({
-                                            'text-pink-primary': phaze === 'work',
-                                            'text-green-primary': phaze === 'short_break',
-                                            'text-blue-primary': phaze === 'long_break',
-                                        })}
-                                        width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <Path stroke="currentColor" d="m2 8 2 2-2 2 2 2-2 2" /><Path stroke="currentColor" d="m22 8-2 2 2 2-2 2 2 2" /><Rect stroke="currentColor" width="8" height="14" x="8" y="5" rx="1" />
-                                    </Svg>
-                                </SegmentItem>
-                                <SegmentItem value="Off">
-                                    <Svg
-                                        className={clsx({
-                                            'text-pink-primary': phaze === 'work',
-                                            'text-green-primary': phaze === 'short_break',
-                                            'text-blue-primary': phaze === 'long_break',
-                                        })}
-                                        width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <Path stroke="currentColor" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /><Line stroke="currentColor" x1="22" x2="16" y1="9" y2="15" /><Line stroke="currentColor" x1="16" x2="22" y1="9" y2="15" />
-                                    </Svg>
-                                </SegmentItem>
-                                {/*  <SegmentItem value="On">
+                        <SegmentedControl
+                            selectedValue={currentSettings.sound}
+                            onValueChange={handleSoundChange}
+                            phaze={phaze}
+                            className="mt-2"
+                        >
+                            <SegmentItem value="System">
+                                <Svg
+                                    className={clsx({
+                                        'text-pink-primary': phaze === 'work',
+                                        'text-green-primary': phaze === 'short_break',
+                                        'text-blue-primary': phaze === 'long_break',
+                                    })}
+                                    width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <Path stroke="currentColor" d="m2 8 2 2-2 2 2 2-2 2" /><Path stroke="currentColor" d="m22 8-2 2 2 2-2 2 2 2" /><Rect stroke="currentColor" width="8" height="14" x="8" y="5" rx="1" />
+                                </Svg>
+                            </SegmentItem>
+                            <SegmentItem value="Off">
+                                <Svg
+                                    className={clsx({
+                                        'text-pink-primary': phaze === 'work',
+                                        'text-green-primary': phaze === 'short_break',
+                                        'text-blue-primary': phaze === 'long_break',
+                                    })}
+                                    width="24" height="24" viewBox="0 0 24 24" fill="none" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <Path stroke="currentColor" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /><Line stroke="currentColor" x1="22" x2="16" y1="9" y2="15" /><Line stroke="currentColor" x1="16" x2="22" y1="9" y2="15" />
+                                </Svg>
+                            </SegmentItem>
+                            {/*  <SegmentItem value="On">
                                     <Svg
                                         className={clsx({
                                             'text-pink-primary': phaze === 'work',
@@ -318,9 +278,7 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
                                         <Path stroke="currentColor" d="M11 4.702a.705.705 0 0 0-1.203-.498L6.413 7.587A1.4 1.4 0 0 1 5.416 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.416a1.4 1.4 0 0 1 .997.413l3.383 3.384A.705.705 0 0 0 11 19.298z" /><Path stroke="currentColor" d="M16 9a5 5 0 0 1 0 6" /><Path stroke="currentColor" d="M19.364 18.364a9 9 0 0 0 0-12.728" />
                                     </Svg>
                                 </SegmentItem> */}
-                            </SegmentedControl>
-                        )}
-
+                        </SegmentedControl>
                     </View>
                     <View className='mt-4'>
                         <Text className={clsx(
@@ -331,40 +289,37 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
                         }
 
                         )}>Skip steps:</Text>
-                        {!isLoading && (
-                            <SegmentedControl
-                                selectedValue={settingsObj.skip}
-                                onValueChange={handleSkipHandler}
-                                phaze={phaze}
-                                className="mt-2"
-                            >
-                                <SegmentItem value="Manual">
-                                    <Text
-                                        className={clsx(
-                                            'text-lg font-bold',
-                                            {
-                                                'text-pink-primary': phaze === 'work',
-                                                'text-green-primary': phaze === 'short_break',
-                                                'text-blue-primary': phaze === 'long_break',
-                                            })}>
-                                        Manual
-                                    </Text>
-                                </SegmentItem>
-                                <SegmentItem value="Auto">
-                                    <Text
-                                        className={clsx(
-                                            'text-lg font-bold',
-                                            {
-                                                'text-pink-primary': phaze === 'work',
-                                                'text-green-primary': phaze === 'short_break',
-                                                'text-blue-primary': phaze === 'long_break',
-                                            })}>
-                                        Auto
-                                    </Text>
-                                </SegmentItem>
-                            </SegmentedControl>
-                        )}
-
+                        <SegmentedControl
+                            selectedValue={currentSettings.skip}
+                            onValueChange={handleSkipHandler}
+                            phaze={phaze}
+                            className="mt-2"
+                        >
+                            <SegmentItem value="Manual">
+                                <Text
+                                    className={clsx(
+                                        'text-lg font-bold',
+                                        {
+                                            'text-pink-primary': phaze === 'work',
+                                            'text-green-primary': phaze === 'short_break',
+                                            'text-blue-primary': phaze === 'long_break',
+                                        })}>
+                                    Manual
+                                </Text>
+                            </SegmentItem>
+                            <SegmentItem value="Auto">
+                                <Text
+                                    className={clsx(
+                                        'text-lg font-bold',
+                                        {
+                                            'text-pink-primary': phaze === 'work',
+                                            'text-green-primary': phaze === 'short_break',
+                                            'text-blue-primary': phaze === 'long_break',
+                                        })}>
+                                    Auto
+                                </Text>
+                            </SegmentItem>
+                        </SegmentedControl>
                     </View>
                     <View className='mt-4'>
                         <Text className={clsx(
@@ -375,50 +330,48 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
                         }
 
                         )}>Focust time:</Text>
-                        {!isLoading && (
-                            <View className={clsx(
-                                'border rounded-full mt-2 overflow-hidden',
-                                {
-                                    'border-pink-secondary bg-pink-secondary': phaze === 'work',
-                                    'border-green-secondary bg-green-secondary': phaze === 'short_break',
-                                    'border-blue-secondary bg-blue-secondary': phaze === 'long_break',
-                                }
-                            )}>
+                        <View className={clsx(
+                            'border rounded-full mt-2 overflow-hidden',
+                            {
+                                'border-pink-secondary bg-pink-secondary': phaze === 'work',
+                                'border-green-secondary bg-green-secondary': phaze === 'short_break',
+                                'border-blue-secondary bg-blue-secondary': phaze === 'long_break',
+                            }
+                        )}>
 
-                                <Picker
-                                    selectedValue={settingsObj.focusDuration}
-                                    onValueChange={(itemValue) => handleFocusDurationChange(itemValue)}
-                                    style={{
-                                        marginLeft: 7,
-                                        color: theme === 'dark' ? '#ffffff' : (
-                                            phaze === 'work'
-                                                ? '#471515'
-                                                : phaze === 'short_break'
-                                                    ? '#14401d'
-                                                    : '#153047'
-                                        )
-                                    }}
-                                    itemStyle={Platform.OS === 'ios' ? {
-                                        marginLeft: 7,
-                                        color: theme === 'dark' ? '#ffffff' : (
-                                            phaze === 'work'
-                                                ? '#471515'
-                                                : phaze === 'short_break'
-                                                    ? '#14401d'
-                                                    : '#153047'
-                                        )
-                                    } : undefined}
-                                >
-                                    {QUICK_TIMES.map((time) => (
-                                        <Picker.Item
-                                            key={time.value}
-                                            label={time.label}
-                                            value={time.value}
-                                        />
-                                    ))}
-                                </Picker>
-                            </View>
-                        )}
+                            <Picker
+                                selectedValue={currentSettings.focusDuration}
+                                onValueChange={(itemValue) => handleFocusDurationChange(itemValue)}
+                                style={{
+                                    marginLeft: 7,
+                                    color: theme === 'dark' ? '#ffffff' : (
+                                        phaze === 'work'
+                                            ? '#471515'
+                                            : phaze === 'short_break'
+                                                ? '#14401d'
+                                                : '#153047'
+                                    )
+                                }}
+                                itemStyle={Platform.OS === 'ios' ? {
+                                    marginLeft: 7,
+                                    color: theme === 'dark' ? '#ffffff' : (
+                                        phaze === 'work'
+                                            ? '#471515'
+                                            : phaze === 'short_break'
+                                                ? '#14401d'
+                                                : '#153047'
+                                    )
+                                } : undefined}
+                            >
+                                {QUICK_TIMES.map((time) => (
+                                    <Picker.Item
+                                        key={time.value}
+                                        label={time.label}
+                                        value={time.value}
+                                    />
+                                ))}
+                            </Picker>
+                        </View>
                     </View>
                     <View className='mt-4'>
                         <Text className={clsx(
@@ -429,50 +382,48 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
                         }
 
                         )}>Short break time:</Text>
-                        {!isLoading && (
-                            <View className={clsx(
-                                'border rounded-full mt-2 overflow-hidden',
-                                {
-                                    'border-pink-secondary bg-pink-secondary': phaze === 'work',
-                                    'border-green-secondary bg-green-secondary': phaze === 'short_break',
-                                    'border-blue-secondary bg-blue-secondary': phaze === 'long_break',
-                                }
-                            )}>
+                        <View className={clsx(
+                            'border rounded-full mt-2 overflow-hidden',
+                            {
+                                'border-pink-secondary bg-pink-secondary': phaze === 'work',
+                                'border-green-secondary bg-green-secondary': phaze === 'short_break',
+                                'border-blue-secondary bg-blue-secondary': phaze === 'long_break',
+                            }
+                        )}>
 
-                                <Picker
-                                    selectedValue={settingsObj.shortBreakDuration}
-                                    onValueChange={(itemValue) => handleShortBreakDurationChange(itemValue)}
-                                    style={{
-                                        marginLeft: 7,
-                                        color: theme === 'dark' ? '#ffffff' : (
-                                            phaze === 'work'
-                                                ? '#471515'
-                                                : phaze === 'short_break'
-                                                    ? '#14401d'
-                                                    : '#153047'
-                                        )
-                                    }}
-                                    itemStyle={Platform.OS === 'ios' ? {
-                                        marginLeft: 7,
-                                        color: theme === 'dark' ? '#ffffff' : (
-                                            phaze === 'work'
-                                                ? '#471515'
-                                                : phaze === 'short_break'
-                                                    ? '#14401d'
-                                                    : '#153047'
-                                        )
-                                    } : undefined}
-                                >
-                                    {QUICK_TIMES.map((time) => (
-                                        <Picker.Item
-                                            key={time.value}
-                                            label={time.label}
-                                            value={time.value}
-                                        />
-                                    ))}
-                                </Picker>
-                            </View>
-                        )}
+                            <Picker
+                                selectedValue={currentSettings.shortBreakDuration}
+                                onValueChange={(itemValue) => handleShortBreakDurationChange(itemValue)}
+                                style={{
+                                    marginLeft: 7,
+                                    color: theme === 'dark' ? '#ffffff' : (
+                                        phaze === 'work'
+                                            ? '#471515'
+                                            : phaze === 'short_break'
+                                                ? '#14401d'
+                                                : '#153047'
+                                    )
+                                }}
+                                itemStyle={Platform.OS === 'ios' ? {
+                                    marginLeft: 7,
+                                    color: theme === 'dark' ? '#ffffff' : (
+                                        phaze === 'work'
+                                            ? '#471515'
+                                            : phaze === 'short_break'
+                                                ? '#14401d'
+                                                : '#153047'
+                                    )
+                                } : undefined}
+                            >
+                                {QUICK_TIMES.map((time) => (
+                                    <Picker.Item
+                                        key={time.value}
+                                        label={time.label}
+                                        value={time.value}
+                                    />
+                                ))}
+                            </Picker>
+                        </View>
                     </View>
                     <View className='mt-4'>
                         <Text className={clsx(
@@ -483,50 +434,48 @@ function Settings({ sound2, settingsObj, setSettingsObj, phaze }: { sound2: any,
                         }
 
                         )}>Long break time:</Text>
-                        {!isLoading && (
-                            <View className={clsx(
-                                'border rounded-full mt-2 overflow-hidden',
-                                {
-                                    'border-pink-secondary bg-pink-secondary': phaze === 'work',
-                                    'border-green-secondary bg-green-secondary': phaze === 'short_break',
-                                    'border-blue-secondary bg-blue-secondary': phaze === 'long_break',
-                                }
-                            )}>
+                        <View className={clsx(
+                            'border rounded-full mt-2 overflow-hidden',
+                            {
+                                'border-pink-secondary bg-pink-secondary': phaze === 'work',
+                                'border-green-secondary bg-green-secondary': phaze === 'short_break',
+                                'border-blue-secondary bg-blue-secondary': phaze === 'long_break',
+                            }
+                        )}>
 
-                                <Picker
-                                    selectedValue={settingsObj.longBreakDuration}
-                                    onValueChange={(itemValue) => handleLongBreakDurationChange(itemValue)}
-                                    style={{
-                                        marginLeft: 7,
-                                        color: theme === 'dark' ? '#ffffff' : (
-                                            phaze === 'work'
-                                                ? '#471515'
-                                                : phaze === 'short_break'
-                                                    ? '#14401d'
-                                                    : '#153047'
-                                        )
-                                    }}
-                                    itemStyle={Platform.OS === 'ios' ? {
-                                        marginLeft: 7,
-                                        color: theme === 'dark' ? '#ffffff' : (
-                                            phaze === 'work'
-                                                ? '#471515'
-                                                : phaze === 'short_break'
-                                                    ? '#14401d'
-                                                    : '#153047'
-                                        )
-                                    } : undefined}
-                                >
-                                    {QUICK_TIMES.map((time) => (
-                                        <Picker.Item
-                                            key={time.value}
-                                            label={time.label}
-                                            value={time.value}
-                                        />
-                                    ))}
-                                </Picker>
-                            </View>
-                        )}
+                            <Picker
+                                selectedValue={currentSettings.longBreakDuration}
+                                onValueChange={(itemValue) => handleLongBreakDurationChange(itemValue)}
+                                style={{
+                                    marginLeft: 7,
+                                    color: theme === 'dark' ? '#ffffff' : (
+                                        phaze === 'work'
+                                            ? '#471515'
+                                            : phaze === 'short_break'
+                                                ? '#14401d'
+                                                : '#153047'
+                                    )
+                                }}
+                                itemStyle={Platform.OS === 'ios' ? {
+                                    marginLeft: 7,
+                                    color: theme === 'dark' ? '#ffffff' : (
+                                        phaze === 'work'
+                                            ? '#471515'
+                                            : phaze === 'short_break'
+                                                ? '#14401d'
+                                                : '#153047'
+                                    )
+                                } : undefined}
+                            >
+                                {QUICK_TIMES.map((time) => (
+                                    <Picker.Item
+                                        key={time.value}
+                                        label={time.label}
+                                        value={time.value}
+                                    />
+                                ))}
+                            </Picker>
+                        </View>
                     </View>
                 </View>
             </Animated.View >

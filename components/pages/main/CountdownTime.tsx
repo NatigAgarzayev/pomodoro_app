@@ -4,11 +4,11 @@ import clsx from 'clsx'
 import { useAudioPlayer, useAudioPlayerStatus } from 'expo-audio'
 import { SettingsType } from '@/constants/SettingsConstants'
 import * as Haptics from 'expo-haptics'
+import { useSettingsStore } from '@/stores/settingsStore'
 
 const endSound = require('../../../assets/audio/time_ended.mp3')
 
 interface CountdownTimeProps {
-    settingsObj: SettingsType,
     step: number,
     pauseTrigger: boolean,
     scenario: string[],
@@ -17,9 +17,10 @@ interface CountdownTimeProps {
     nextStep: () => void,
 }
 
-function CountdownTime({ settingsObj, pauseTrigger, step, scenario, isPaused, setIsPaused, nextStep }: CountdownTimeProps) {
+function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, nextStep }: CountdownTimeProps) {
     const phaze = scenario[step]
     const transformedPhaze = phaze === 'work' ? 'focusDuration' : phaze === 'short_break' ? 'shortBreakDuration' : 'longBreakDuration'
+    const { settings: settingsObj } = useSettingsStore()
     const [timeLeft, setTimeLeft] = useState<number>(Number(settingsObj[transformedPhaze]))
     const player3 = useAudioPlayer(endSound)
 

@@ -15,6 +15,7 @@ import { defaultSettings, SETTINGS_KEY, SettingsType } from '@/constants/Setting
 import { useColorScheme } from 'nativewind'
 import * as Haptics from 'expo-haptics'
 import { useThemeStore } from '@/stores/themeStore'
+import { useSettingsStore } from '@/stores/settingsStore'
 
 
 const btnPressSource = require('../assets/audio/btn_press.mp3')
@@ -27,7 +28,7 @@ export default function HomeScreen() {
     const [step, setStep] = useState<number>(1)
     const [isPaused, setIsPaused] = useState<boolean>(true)
     const [pauseTrigger, setPauseTrigger] = useState<boolean>(false)
-    const [settingsObj, setSettingsObj] = useState<SettingsType>(defaultSettings)
+    const { settings: settingsObj } = useSettingsStore()
     const [musicHasStarted, setMusicHasStarted] = useState(false)
     const phaze = scenario[step - 1]
     const { colorScheme, setColorScheme } = useColorScheme()
@@ -35,24 +36,6 @@ export default function HomeScreen() {
     const player2 = useAudioPlayer(lofiMusicSource)
     const { didJustFinish, playing } = useAudioPlayerStatus(player2)
     const { setTheme } = useThemeStore(state => state)
-
-    useEffect(() => {
-        const loadSettings = async () => {
-            try {
-                const saved = await AsyncStorage.getItem(SETTINGS_KEY)
-                if (saved) {
-                    const parsed = JSON.parse(saved)
-                    setSettingsObj({ ...defaultSettings, ...parsed })
-
-                } else {
-                    setSettingsObj(defaultSettings)
-                }
-            } catch {
-                setSettingsObj(defaultSettings)
-            }
-        }
-        loadSettings()
-    }, [])
 
     const stepChangeHandler = () => {
         if (step < scenario.length) {
@@ -111,12 +94,12 @@ export default function HomeScreen() {
             }
         )}>
             <View>
-                <Settings sound2={player2} settingsObj={settingsObj} setSettingsObj={setSettingsObj} phaze={phaze} />
+                <Settings sound2={player2} phaze={phaze} />
             </View>
             <View className='flex-1 justify-center items-center'>
                 <PhazeStatus phaze={phaze} />
                 <StepsCounter step={step} scenarioLength={scenario.length} />
-                <CountdownTime settingsObj={settingsObj} pauseTrigger={pauseTrigger} step={step - 1} scenario={scenario} isPaused={isPaused} setIsPaused={setIsPaused} nextStep={stepChangeHandler} />
+                <CountdownTime pauseTrigger={pauseTrigger} step={step - 1} scenario={scenario} isPaused={isPaused} setIsPaused={setIsPaused} nextStep={stepChangeHandler} />
                 <TimerControllers pauseTrigger={pauseTrigger} setPauseTrigger={setPauseTrigger} phaze={phaze} isPaused={isPaused} setIsPaused={setIsPaused} nextStep={stepChangeHandler} />
             </View>
         </SafeAreaView >
