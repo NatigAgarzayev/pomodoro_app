@@ -1,5 +1,5 @@
 import { View, Text } from 'react-native'
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import clsx from 'clsx'
 import { useAudioPlayer } from 'expo-audio'
 import * as Haptics from 'expo-haptics'
@@ -18,127 +18,199 @@ interface CountdownTimeProps {
 }
 
 function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, nextStep }: CountdownTimeProps) {
-    const phaze = scenario[step]
+    const phaze = scenario[step] || 'work' // Safe fallback
     const transformedPhaze = phaze === 'work' ? 'focusDuration' : phaze === 'short_break' ? 'shortBreakDuration' : 'longBreakDuration'
     const { settings: settingsObj } = useSettingsStore()
 
     const [timeLeft, setTimeLeft] = useState<number>(Number(settingsObj[transformedPhaze]))
     const [startTime, setStartTime] = useState<number | null>(null)
     const [pausedTime, setPausedTime] = useState<number>(0)
+
+    // Refs for cleanup
     const intervalRef = useRef<NodeJS.Timeout | null>(null)
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const pauseStartRef = useRef<number | null>(null)
+    const isProcessingRef = useRef<boolean>(false)
+    const mountedRef = useRef<boolean>(true)
+
     const player3 = useAudioPlayer(endSound)
 
-    const calculateTimeLeft = () => {
+    // Memoize duration to prevent unnecessary recalculations
+    const duration = useMemo(() => Number(settingsObj[transformedPhaze]), [settingsObj, transformedPhaze])
+
+    // Clear all timers helper
+    const clearAllTimers = useCallback(() => {
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current)
+            intervalRef.current = null
+        }
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current)
+            timeoutRef.current = null
+        }
+    }, [])
+
+    // Safe state updates only if component is mounted
+    const safeSetState = useCallback((setter: () => void) => {
+        if (mountedRef.current) {
+            setter()
+        }
+    }, [])
+
+    const calculateTimeLeft = useCallback(() => {
         if (!startTime) return timeLeft
 
         const now = Date.now()
         const elapsed = Math.floor((now - startTime - pausedTime) / 1000)
-        const remaining = Math.max(0, Number(settingsObj[transformedPhaze]) - elapsed)
+        const remaining = Math.max(0, duration - elapsed)
         return remaining
-    }
+    }, [startTime, timeLeft, pausedTime, duration])
 
-    useEffect(() => {
-        if (intervalRef.current) {
-            clearInterval(intervalRef.current)
+    // Debounced timer finish handler
+    const handleTimerFinish = useCallback(() => {
+        if (isProcessingRef.current) return // Prevent multiple calls
+        isProcessingRef.current = true
+
+        try {
+            clearAllTimers()
+
+            // Play sound/haptic feedback
+            if (settingsObj.sound === 'System') {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+            }
+            if (settingsObj.sound === 'On') {
+                try {
+                    player3.seekTo(0)
+                    player3.play()
+                } catch (error) {
+                    console.warn('Audio play error:', error)
+                }
+            }
+
+            // Reset timer state
+            safeSetState(() => {
+                setStartTime(null)
+                setPausedTime(0)
+                pauseStartRef.current = null
+            })
+
+            // Call nextStep
+            nextStep()
+
+            // Auto-start next timer if enabled
+            if (settingsObj.skip === 'Auto') {
+                timeoutRef.current = setTimeout(() => {
+                    if (mountedRef.current) {
+                        setIsPaused(false)
+                    }
+                }, 1000)
+            }
+        } catch (error) {
+            console.error('Timer finish error:', error)
+        } finally {
+            // Reset processing flag after a delay
+            setTimeout(() => {
+                isProcessingRef.current = false
+            }, 500)
         }
+    }, [settingsObj.sound, settingsObj.skip, player3, nextStep, clearAllTimers, safeSetState])
 
-        if (!isPaused && startTime) {
+    // Main timer interval effect
+    useEffect(() => {
+        clearAllTimers()
+
+        if (!isPaused && startTime && mountedRef.current) {
             intervalRef.current = setInterval(() => {
+                if (!mountedRef.current) return
+
                 const remaining = calculateTimeLeft()
                 setTimeLeft(remaining)
 
                 if (remaining <= 0) {
-                    if (settingsObj.sound === 'System') {
-                        Haptics.notificationAsync(
-                            Haptics.NotificationFeedbackType.Success
-                        )
-                    }
-                    if (settingsObj.sound === 'On') {
-                        player3.seekTo(0)
-                        player3.play()
-                    }
-
-                    setStartTime(null)
-                    setPausedTime(0)
-
-                    nextStep()
-
-                    if (settingsObj.skip === 'Auto') {
-                        setTimeout(() => {
-                            setIsPaused(false)
-                        }, 1000)
-                    }
+                    handleTimerFinish()
                 }
-            }, 100)
+            }, 1000) // Reduced to 1 second for better performance
         }
 
-        return () => {
-            if (intervalRef.current) {
-                clearInterval(intervalRef.current)
-            }
-        }
-    }, [isPaused, startTime, pausedTime, settingsObj.sound, settingsObj.skip])
+        return clearAllTimers
+    }, [isPaused, startTime, calculateTimeLeft, handleTimerFinish, clearAllTimers])
 
+    // App state change handler
     useEffect(() => {
         const handleAppStateChange = (nextAppState: string) => {
-            if (nextAppState === 'active' && !isPaused && startTime) {
+            if (nextAppState === 'active' && !isPaused && startTime && mountedRef.current) {
                 const remaining = calculateTimeLeft()
-                setTimeLeft(remaining)
+                safeSetState(() => setTimeLeft(remaining))
             }
         }
 
         const subscription = AppState.addEventListener('change', handleAppStateChange)
         return () => subscription?.remove()
-    }, [isPaused, startTime, pausedTime])
+    }, [isPaused, startTime, calculateTimeLeft, safeSetState])
 
+    // Start/pause timer effect
     useEffect(() => {
-        if (!isPaused) {
-            if (!startTime) {
+        if (!isPaused && !startTime && mountedRef.current) {
+            // Starting timer
+            safeSetState(() => {
                 setStartTime(Date.now())
                 setPausedTime(0)
-            }
-        } else {
-            if (startTime) {
-                const currentTime = Date.now()
-                const currentPauseDuration = currentTime - (startTime + pausedTime + (Number(settingsObj[transformedPhaze]) - timeLeft) * 1000)
-            }
+                pauseStartRef.current = null
+            })
         }
-    }, [isPaused])
+    }, [isPaused, startTime, safeSetState])
 
-    const pauseStartRef = useRef<number | null>(null)
-
+    // Pause duration tracking
     useEffect(() => {
-        if (isPaused && startTime) {
+        if (isPaused && startTime && !pauseStartRef.current) {
             pauseStartRef.current = Date.now()
-        } else if (!isPaused && pauseStartRef.current) {
+        } else if (!isPaused && pauseStartRef.current && mountedRef.current) {
             const pauseDuration = Date.now() - pauseStartRef.current
-            setPausedTime(prev => prev + pauseDuration)
+            safeSetState(() => {
+                setPausedTime(prev => prev + pauseDuration)
+            })
             pauseStartRef.current = null
         }
-    }, [isPaused, startTime])
+    }, [isPaused, startTime, safeSetState])
 
+    // Reset timer on step/phase change
     useEffect(() => {
-        setTimeLeft(settingsObj[transformedPhaze])
-        setStartTime(null)
-        setPausedTime(0)
-        pauseStartRef.current = null
-        setIsPaused(true)
-    }, [step, phaze, pauseTrigger])
+        clearAllTimers()
+        isProcessingRef.current = false
 
+        safeSetState(() => {
+            setTimeLeft(duration)
+            setStartTime(null)
+            setPausedTime(0)
+            pauseStartRef.current = null
+            setIsPaused(true)
+        })
+    }, [step, phaze, pauseTrigger, duration, clearAllTimers, safeSetState])
+
+    // Update duration when settings change (only if paused)
     useEffect(() => {
-        if (isPaused && !startTime) {
-            setTimeLeft(Number(settingsObj[transformedPhaze]))
+        if (isPaused && !startTime && mountedRef.current) {
+            safeSetState(() => setTimeLeft(duration))
         }
-    }, [settingsObj.focusDuration, settingsObj.shortBreakDuration, settingsObj.longBreakDuration, transformedPhaze, isPaused, startTime])
+    }, [duration, isPaused, startTime, safeSetState])
 
-    const formatTime = (totalSeconds: number) => {
+    // Cleanup on unmount
+    useEffect(() => {
+        return () => {
+            mountedRef.current = false
+            clearAllTimers()
+            isProcessingRef.current = false
+        }
+    }, [clearAllTimers])
+
+    const formatTime = useCallback((totalSeconds: number) => {
         const minutes = Math.floor(totalSeconds / 60)
         const seconds = totalSeconds % 60
         return {
             minutes: String(minutes).padStart(2, '0'),
             seconds: String(seconds).padStart(2, '0'),
         }
-    }
+    }, [])
 
     const { minutes, seconds } = formatTime(timeLeft)
 

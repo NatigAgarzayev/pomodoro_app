@@ -26,7 +26,7 @@ cssInterop(Path, {
     },
 })
 
-function Settings({ sound2, phaze, step, setStep }: { sound2: any, phaze: string, step: number, setStep: (step: number) => void }) {
+function Settings({ phaze, step, setStep }: { phaze: string, step: number, setStep: (step: number) => void }) {
     const [openPanel, setOpenPanel] = useState(false)
     const translateX = useSharedValue(100)
     const { theme } = useThemeStore(state => state)
@@ -72,9 +72,6 @@ function Settings({ sound2, phaze, step, setStep }: { sound2: any, phaze: string
     }
 
     const handleLofiChange = (lofi: string) => {
-        if (lofi === 'Off') {
-            sound2.pause()
-        }
         updateSetting('lofi', lofi as SettingsType['lofi'])
     }
 

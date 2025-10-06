@@ -38,10 +38,17 @@ export default function HomeScreen() {
     const { setTheme } = useThemeStore(state => state)
     const phaze = scenario[settingsObj.stepsMode][step - 1]
 
+
     useEffect(() => {
         setIsPaused(true)
         setPauseTrigger(prev => !prev)
     }, [settingsObj.stepsMode])
+
+    useEffect(() => {
+        if (settingsObj.lofi === "Off") {
+            player2.pause()
+        }
+    }, [settingsObj.lofi])
 
     const stepChangeHandler = () => {
         if (step < scenario[settingsObj.stepsMode].length) {
@@ -100,7 +107,7 @@ export default function HomeScreen() {
             }
         )}>
             <View>
-                <Settings sound2={player2} phaze={phaze} step={step} setStep={setStep} />
+                <Settings phaze={phaze} step={step} setStep={setStep} />
             </View>
             <View className='flex-1 justify-center items-center'>
                 <PhazeStatus phaze={phaze} />
