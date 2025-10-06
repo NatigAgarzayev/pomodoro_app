@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { StateStorage } from 'zustand/middleware'
+import { SettingsType, defaultSettings } from '@/constants/SettingsConstants'
 import { MMKV } from 'react-native-mmkv'
 
 const storage = new MMKV()
@@ -17,27 +18,6 @@ const zustandStorage: StateStorage = {
         return storage.delete(name)
     },
 }
-
-export type SettingsType = {
-    theme: 'System' | 'Light' | 'Dark'
-    lofi: 'On' | 'Off'
-    sound: 'System' | 'On' | 'Off'
-    skip: 'Manual' | 'Auto'
-    focusDuration: number
-    shortBreakDuration: number
-    longBreakDuration: number
-}
-
-export const defaultSettings: SettingsType = {
-    theme: 'Light',
-    lofi: 'Off',
-    sound: 'System',
-    skip: 'Manual',
-    focusDuration: 1500,
-    shortBreakDuration: 300,
-    longBreakDuration: 900,
-}
-
 interface SettingsStore {
     settings: SettingsType
     saveSettings: (newSettings: SettingsType) => void

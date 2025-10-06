@@ -1,4 +1,3 @@
-// hooks/useDoubleBackExit.ts
 import { useEffect, useRef, useCallback } from 'react'
 import { BackHandler, ToastAndroid } from 'react-native'
 

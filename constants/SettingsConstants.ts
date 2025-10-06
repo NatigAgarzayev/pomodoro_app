@@ -3,6 +3,7 @@ export type SettingsType = {
     lofi: 'On' | 'Off'
     sound: 'System' | 'On' | 'Off'
     skip: 'Manual' | 'Auto'
+    stepsMode: '4 steps' | '8 steps'
     focusDuration: number
     shortBreakDuration: number
     longBreakDuration: number
@@ -15,6 +16,7 @@ export const defaultSettings: SettingsType = {
     lofi: 'Off',
     sound: 'System',
     skip: 'Manual',
+    stepsMode: '8 steps',
     focusDuration: 1500,
     shortBreakDuration: 300,
     longBreakDuration: 900,

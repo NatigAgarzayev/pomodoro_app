@@ -26,7 +26,7 @@ cssInterop(Path, {
     },
 })
 
-function Settings({ sound2, phaze }: { sound2: any, phaze: string }) {
+function Settings({ sound2, phaze, step, setStep }: { sound2: any, phaze: string, step: number, setStep: (step: number) => void }) {
     const [openPanel, setOpenPanel] = useState(false)
     const translateX = useSharedValue(100)
     const { theme } = useThemeStore(state => state)
@@ -103,6 +103,12 @@ function Settings({ sound2, phaze }: { sound2: any, phaze: string }) {
         updateSetting('skip', skip as SettingsType['skip'])
     }
 
+    const handleStepsModalChange = (stepsMode: string) => {
+        if (stepsMode === '4 steps' && step > 4) {
+            setStep(1)
+        }
+        updateSetting('stepsMode', stepsMode as SettingsType['stepsMode'])
+    }
 
     const currentSettings = settings
 
@@ -126,7 +132,7 @@ function Settings({ sound2, phaze }: { sound2: any, phaze: string }) {
                 </Svg>
             </Pressable>
 
-            <Animated.View
+            <Animated.ScrollView
                 style={[animatedStyle]}
                 className={clsx(
                     'shadow-lg w-full h-screen absolute top-0 z-50 right-0',
@@ -136,8 +142,17 @@ function Settings({ sound2, phaze }: { sound2: any, phaze: string }) {
                         'bg-blue-wall': phaze === 'long_break',
                     }
                 )}
+                stickyHeaderIndices={[0]}
             >
-                <View className='flex-row items-center gap-2 justify-start px-6 pt-6'>
+                <View
+                    className={clsx(
+                        'flex-row items-center gap-2 justify-start px-6 pt-6 pb-3',
+                        {
+                            'bg-pink-wall': phaze === 'work',
+                            'bg-green-wall': phaze === 'short_break',
+                            'bg-blue-wall': phaze === 'long_break',
+                        }
+                    )}>
                     <Pressable className='w-8' onPress={handleButtonPress}>
                         <Svg className={clsx({
                             'text-pink-primary': phaze === 'work',
@@ -347,6 +362,47 @@ function Settings({ sound2, phaze }: { sound2: any, phaze: string }) {
                             'text-blue-primary': phaze === 'long_break',
                         }
 
+                        )}>Steps mode:</Text>
+                        <SegmentedControl
+                            selectedValue={currentSettings.stepsMode}
+                            onValueChange={handleStepsModalChange}
+                            phaze={phaze}
+                            className="mt-2"
+                        >
+                            <SegmentItem value="4 steps">
+                                <Text
+                                    className={clsx(
+                                        'text-lg font-bold',
+                                        {
+                                            'text-pink-primary': phaze === 'work',
+                                            'text-green-primary': phaze === 'short_break',
+                                            'text-blue-primary': phaze === 'long_break',
+                                        })}>
+                                    4 steps
+                                </Text>
+                            </SegmentItem>
+                            <SegmentItem value="8 steps">
+                                <Text
+                                    className={clsx(
+                                        'text-lg font-bold',
+                                        {
+                                            'text-pink-primary': phaze === 'work',
+                                            'text-green-primary': phaze === 'short_break',
+                                            'text-blue-primary': phaze === 'long_break',
+                                        })}>
+                                    8 steps
+                                </Text>
+                            </SegmentItem>
+                        </SegmentedControl>
+                    </View>
+                    <View className='mt-4'>
+                        <Text className={clsx(
+                            'text-xl font-medium', {
+                            'text-pink-primary': phaze === 'work',
+                            'text-green-primary': phaze === 'short_break',
+                            'text-blue-primary': phaze === 'long_break',
+                        }
+
                         )}>Focust time:</Text>
                         <View className={clsx(
                             'border rounded-full mt-2 overflow-hidden',
@@ -496,7 +552,7 @@ function Settings({ sound2, phaze }: { sound2: any, phaze: string }) {
                         </View>
                     </View>
                 </View>
-            </Animated.View >
+            </Animated.ScrollView>
         </>
     )
 }

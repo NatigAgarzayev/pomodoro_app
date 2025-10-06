@@ -135,7 +135,7 @@ const SegmentItem: React.FC<SegmentItemProps> = ({
             style={[
                 {
                     width: itemWidth,
-                    zIndex: 10,
+                    zIndex: 9,
                 },
             ]}
             activeOpacity={1}
