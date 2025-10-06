@@ -4,6 +4,7 @@ import { vars } from 'nativewind'
 import { useColorScheme } from 'react-native'
 import { useThemeStore } from '@/stores/themeStore'
 import { useSettingsStore } from '@/stores/settingsStore'
+import * as NavigationBar from 'expo-navigation-bar'
 
 const themes: any = {
     default: {
@@ -60,10 +61,13 @@ export default function Theme({ name, children }: { name: string, children: Reac
                 if (settings) {
                     if (settings.theme === 'System') {
                         selectedTheme = systemColorScheme === 'dark' ? 'dark' : 'light'
+                        NavigationBar.setButtonStyleAsync(selectedTheme)
                     } else if (settings.theme === 'Dark') {
                         selectedTheme = 'dark'
+                        NavigationBar.setButtonStyleAsync('light')
                     } else if (settings.theme === 'Light') {
                         selectedTheme = 'light'
+                        NavigationBar.setButtonStyleAsync('dark')
                     }
                 }
                 setTheme(selectedTheme)
@@ -75,7 +79,7 @@ export default function Theme({ name, children }: { name: string, children: Reac
         }
 
         loadTheme()
-    }, [settings.theme, systemColorScheme]) // ← Add systemColorScheme as dependency
+    }, [settings.theme, systemColorScheme])
 
     if (!themeLoaded) return null
     return (
