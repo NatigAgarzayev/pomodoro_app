@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { Slot } from 'expo-router'
 import Theme from '@/components/provider/Theme'
 import * as SplashScreen from 'expo-splash-screen'

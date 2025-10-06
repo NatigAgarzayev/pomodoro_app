@@ -1,6 +1,6 @@
-import { View, Text, Pressable } from 'react-native'
+import { View, Pressable } from 'react-native'
 import React, { useState } from 'react'
-import Svg, { Circle, Rect, Path, G } from 'react-native-svg'
+import Svg, { Rect, Path, G } from 'react-native-svg'
 import clsx from 'clsx'
 import { cssInterop } from 'nativewind'
 import * as Haptics from 'expo-haptics'

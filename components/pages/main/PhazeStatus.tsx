@@ -1,7 +1,7 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 import clsx from 'clsx'
-import Svg, { Circle, Rect, Path } from 'react-native-svg'
+import Svg, { Path } from 'react-native-svg'
 import { cssInterop } from 'nativewind'
 
 cssInterop(Svg, { className: 'style' })

@@ -26,7 +26,6 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
     const [startTime, setStartTime] = useState<number | null>(null)
     const [pausedTime, setPausedTime] = useState<number>(0)
 
-    // Refs for cleanup
     const intervalRef = useRef<NodeJS.Timeout | null>(null)
     const timeoutRef = useRef<NodeJS.Timeout | null>(null)
     const pauseStartRef = useRef<number | null>(null)
@@ -35,10 +34,8 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
 
     const player3 = useAudioPlayer(endSound)
 
-    // Memoize duration to prevent unnecessary recalculations
     const duration = useMemo(() => Number(settingsObj[transformedPhaze]), [settingsObj, transformedPhaze])
 
-    // Clear all timers helper
     const clearAllTimers = useCallback(() => {
         if (intervalRef.current) {
             clearInterval(intervalRef.current)
@@ -50,7 +47,6 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
         }
     }, [])
 
-    // Safe state updates only if component is mounted
     const safeSetState = useCallback((setter: () => void) => {
         if (mountedRef.current) {
             setter()
@@ -66,15 +62,13 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
         return remaining
     }, [startTime, timeLeft, pausedTime, duration])
 
-    // Debounced timer finish handler
     const handleTimerFinish = useCallback(() => {
-        if (isProcessingRef.current) return // Prevent multiple calls
+        if (isProcessingRef.current) return
         isProcessingRef.current = true
 
         try {
             clearAllTimers()
 
-            // Play sound/haptic feedback
             if (settingsObj.sound === 'System') {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
             }
@@ -87,17 +81,14 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
                 }
             }
 
-            // Reset timer state
             safeSetState(() => {
                 setStartTime(null)
                 setPausedTime(0)
                 pauseStartRef.current = null
             })
 
-            // Call nextStep
             nextStep()
 
-            // Auto-start next timer if enabled
             if (settingsObj.skip === 'Auto') {
                 timeoutRef.current = setTimeout(() => {
                     if (mountedRef.current) {
@@ -108,14 +99,12 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
         } catch (error) {
             console.error('Timer finish error:', error)
         } finally {
-            // Reset processing flag after a delay
             setTimeout(() => {
                 isProcessingRef.current = false
             }, 500)
         }
     }, [settingsObj.sound, settingsObj.skip, player3, nextStep, clearAllTimers, safeSetState])
 
-    // Main timer interval effect
     useEffect(() => {
         clearAllTimers()
 
@@ -129,13 +118,12 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
                 if (remaining <= 0) {
                     handleTimerFinish()
                 }
-            }, 1000) // Reduced to 1 second for better performance
+            }, 1000)
         }
 
         return clearAllTimers
     }, [isPaused, startTime, calculateTimeLeft, handleTimerFinish, clearAllTimers])
 
-    // App state change handler
     useEffect(() => {
         const handleAppStateChange = (nextAppState: string) => {
             if (nextAppState === 'active' && !isPaused && startTime && mountedRef.current) {
@@ -148,10 +136,8 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
         return () => subscription?.remove()
     }, [isPaused, startTime, calculateTimeLeft, safeSetState])
 
-    // Start/pause timer effect
     useEffect(() => {
         if (!isPaused && !startTime && mountedRef.current) {
-            // Starting timer
             safeSetState(() => {
                 setStartTime(Date.now())
                 setPausedTime(0)
@@ -160,7 +146,6 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
         }
     }, [isPaused, startTime, safeSetState])
 
-    // Pause duration tracking
     useEffect(() => {
         if (isPaused && startTime && !pauseStartRef.current) {
             pauseStartRef.current = Date.now()
@@ -173,7 +158,6 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
         }
     }, [isPaused, startTime, safeSetState])
 
-    // Reset timer on step/phase change
     useEffect(() => {
         clearAllTimers()
         isProcessingRef.current = false
@@ -187,14 +171,12 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
         })
     }, [step, phaze, pauseTrigger, duration, clearAllTimers, safeSetState])
 
-    // Update duration when settings change (only if paused)
     useEffect(() => {
         if (isPaused && !startTime && mountedRef.current) {
             safeSetState(() => setTimeLeft(duration))
         }
     }, [duration, isPaused, startTime, safeSetState])
 
-    // Cleanup on unmount
     useEffect(() => {
         return () => {
             mountedRef.current = false

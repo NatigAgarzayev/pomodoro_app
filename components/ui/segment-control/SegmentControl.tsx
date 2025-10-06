@@ -1,42 +1,42 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext } from 'react'
 import {
     StyleSheet,
     TouchableOpacity,
     View,
     useWindowDimensions,
-} from 'react-native';
+} from 'react-native'
 import Animated, {
     useAnimatedStyle,
     withTiming,
-} from 'react-native-reanimated';
-import clsx from 'clsx';
+} from 'react-native-reanimated'
+import clsx from 'clsx'
 
 type SegmentedControlContextType = {
-    selectedValue: string;
-    onValueChange?: (value: string) => void;
-    phaze: string;
-    itemWidth: number;
-    children: React.ReactElement[];
-};
+    selectedValue: string
+    onValueChange?: (value: string) => void
+    phaze: string
+    itemWidth: number
+    children: React.ReactElement[]
+}
 
-const SegmentedControlContext = createContext<SegmentedControlContextType | null>(null);
+const SegmentedControlContext = createContext<SegmentedControlContextType | null>(null)
 
 const useSegmentedControl = () => {
-    const context = useContext(SegmentedControlContext);
+    const context = useContext(SegmentedControlContext)
     if (!context) {
-        throw new Error('SegmentItem must be used within SegmentedControl');
+        throw new Error('SegmentItem must be used within SegmentedControl')
     }
-    return context;
-};
+    return context
+}
 
 // Main SegmentedControl component
 type SegmentedControlProps = {
-    children: React.ReactElement[];
-    selectedValue: string;
-    onValueChange?: (value: string) => void;
-    phaze?: string;
-    className?: string;
-};
+    children: React.ReactElement[]
+    selectedValue: string
+    onValueChange?: (value: string) => void
+    phaze?: string
+    className?: string
+}
 
 const SegmentedControl: React.FC<SegmentedControlProps> = ({
     children,
@@ -45,21 +45,21 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
     phaze = 'work',
     className
 }) => {
-    const { width: windowWidth } = useWindowDimensions();
+    const { width: windowWidth } = useWindowDimensions()
 
-    const internalPadding = 20;
-    const segmentedControlWidth = windowWidth - 40;
-    const itemWidth = (segmentedControlWidth - internalPadding) / children.length;
+    const internalPadding = 20
+    const segmentedControlWidth = windowWidth - 40
+    const itemWidth = (segmentedControlWidth - internalPadding) / children.length
 
-    const selectedIndex = children.findIndex((child: any) => child.props.value === selectedValue);
+    const selectedIndex = children.findIndex((child: any) => child.props.value === selectedValue)
 
     const rStyle = useAnimatedStyle(() => {
         return {
             left: withTiming(
                 itemWidth * selectedIndex + internalPadding / 2
             ),
-        };
-    }, [selectedValue, selectedIndex, itemWidth]);
+        }
+    }, [selectedValue, selectedIndex, itemWidth])
 
     const contextValue: SegmentedControlContextType = {
         selectedValue,
@@ -67,7 +67,7 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
         phaze,
         itemWidth,
         children
-    };
+    }
 
     return (
         <SegmentedControlContext.Provider value={contextValue}>
@@ -111,22 +111,22 @@ const SegmentedControl: React.FC<SegmentedControlProps> = ({
                 {children}
             </View>
         </SegmentedControlContext.Provider>
-    );
-};
+    )
+}
 
 type SegmentItemProps = {
-    value: string;
-    children: React.ReactNode;
-    className?: string;
-};
+    value: string
+    children: React.ReactNode
+    className?: string
+}
 
 const SegmentItem: React.FC<SegmentItemProps> = ({
     value,
     children,
     className
 }) => {
-    const { selectedValue, onValueChange, phaze, itemWidth } = useSegmentedControl();
-    const isSelected = selectedValue === value;
+    const { selectedValue, onValueChange, phaze, itemWidth } = useSegmentedControl()
+    const isSelected = selectedValue === value
 
     return (
         <TouchableOpacity
@@ -151,8 +151,8 @@ const SegmentItem: React.FC<SegmentItemProps> = ({
                 {children}
             </View>
         </TouchableOpacity>
-    );
-};
+    )
+}
 
 const styles = StyleSheet.create({
     innerShadow: {
@@ -177,4 +177,4 @@ const styles = StyleSheet.create({
     },
 })
 
-export { SegmentedControl, SegmentItem };
+export { SegmentedControl, SegmentItem }

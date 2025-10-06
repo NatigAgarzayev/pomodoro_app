@@ -1,4 +1,4 @@
-import { Button, Pressable, Text, View } from 'react-native'
+import { View } from 'react-native'
 import React, { useEffect, useState } from 'react'
 import { vars } from 'nativewind'
 import { useColorScheme } from 'react-native'
