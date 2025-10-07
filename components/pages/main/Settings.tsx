@@ -17,6 +17,7 @@ import * as Haptics from 'expo-haptics'
 import { useThemeStore } from '@/stores/themeStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useDoubleBackExit } from '@/hooks/useDoubleBackExit'
+import { useDebounce } from '@/hooks/useDebounce'
 
 cssInterop(Svg, { className: 'style' })
 cssInterop(Path, {
@@ -67,9 +68,9 @@ function Settings({ phaze, step, setStep }: { phaze: string, step: number, setSt
         }
     })
 
-    const handleThemeChange = (theme: string) => {
+    const handleThemeChange = useDebounce((theme: string) => {
         updateSetting('theme', theme as SettingsType['theme'])
-    }
+    }, 300)
 
     const handleLofiChange = (lofi: string) => {
         updateSetting('lofi', lofi as SettingsType['lofi'])
