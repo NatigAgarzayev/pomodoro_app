@@ -72,18 +72,18 @@ function Settings({ phaze, step, setStep }: { phaze: string, step: number, setSt
         updateSetting('theme', theme as SettingsType['theme'])
     }, 300)
 
-    const handleLofiChange = (lofi: string) => {
+    const handleLofiChange = useDebounce((lofi: string) => {
         updateSetting('lofi', lofi as SettingsType['lofi'])
-    }
+    }, 300)
 
-    const handleSoundChange = (sound: string) => {
+    const handleSoundChange = useDebounce((sound: string) => {
         if (sound === 'System') {
             Haptics.notificationAsync(
                 Haptics.NotificationFeedbackType.Success
             )
         }
         updateSetting('sound', sound as SettingsType['sound'])
-    }
+    }, 300)
 
     const handleFocusDurationChange = (duration: number) => {
         updateSetting('focusDuration', duration)
@@ -97,16 +97,16 @@ function Settings({ phaze, step, setStep }: { phaze: string, step: number, setSt
         updateSetting('longBreakDuration', duration)
     }
 
-    const handleSkipHandler = (skip: string) => {
+    const handleSkipHandler = useDebounce((skip: string) => {
         updateSetting('skip', skip as SettingsType['skip'])
-    }
+    }, 300)
 
-    const handleStepsModalChange = (stepsMode: string) => {
+    const handleStepsModalChange = useDebounce((stepsMode: string) => {
         if (stepsMode === '4 steps' && step > 4) {
             setStep(1)
         }
         updateSetting('stepsMode', stepsMode as SettingsType['stepsMode'])
-    }
+    }, 300)
 
     const currentSettings = settings
 

@@ -4,6 +4,7 @@ import Svg, { Rect, Path, G } from 'react-native-svg'
 import clsx from 'clsx'
 import { cssInterop } from 'nativewind'
 import * as Haptics from 'expo-haptics'
+import { useSettingsStore } from '@/stores/settingsStore'
 
 cssInterop(Svg, { className: 'style' })
 cssInterop(Path, {
@@ -24,11 +25,14 @@ interface TimerControllersProps {
 
 export default function TimerControllers({ pauseTrigger, setPauseTrigger, phaze, isPaused, setIsPaused, nextStep }: TimerControllersProps) {
     const [isDisabled, setIsDisabled] = useState(false)
+    const { settings } = useSettingsStore()
 
     const handleNextStep = () => {
         nextStep()
         setIsDisabled(true)
-        Haptics.selectionAsync()
+        if (settings.sound === "System") {
+            Haptics.selectionAsync()
+        }
         setTimeout(() => setIsDisabled(false), 1000)
     }
 
