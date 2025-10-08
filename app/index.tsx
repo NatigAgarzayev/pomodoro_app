@@ -60,8 +60,6 @@ function HomeScreen() {
         }
     }, [settingsObj.theme, systemTheme])
 
-    console.log('is Paused', isPaused, Date.now())
-
     return (
         <SafeAreaView key={colorScheme} className={clsx('h-full',
             {
