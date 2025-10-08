@@ -4,7 +4,7 @@ import Theme from '@/components/provider/Theme'
 import * as SplashScreen from 'expo-splash-screen'
 
 SplashScreen.setOptions({
-    duration: 3000,
+    duration: 1000,
     fade: true,
 })
 

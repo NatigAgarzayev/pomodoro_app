@@ -18,13 +18,14 @@ interface CountdownTimeProps {
 }
 
 function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, nextStep }: CountdownTimeProps) {
-    const phaze = scenario[step] || 'work' // Safe fallback
+    const phaze = scenario[step] || 'work'
     const transformedPhaze = phaze === 'work' ? 'focusDuration' : phaze === 'short_break' ? 'shortBreakDuration' : 'longBreakDuration'
     const { settings: settingsObj } = useSettingsStore()
 
     const [timeLeft, setTimeLeft] = useState<number>(Number(settingsObj[transformedPhaze]))
     const [startTime, setStartTime] = useState<number | null>(null)
     const [pausedTime, setPausedTime] = useState<number>(0)
+    const [justFinished, setJustFinished] = useState(false)
 
     const intervalRef = useRef<NodeJS.Timeout | null>(null)
     const timeoutRef = useRef<NodeJS.Timeout | null>(null)
@@ -85,17 +86,10 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
                 setStartTime(null)
                 setPausedTime(0)
                 pauseStartRef.current = null
+                setJustFinished(true)
             })
 
             nextStep()
-
-            if (settingsObj.skip === 'Auto') {
-                timeoutRef.current = setTimeout(() => {
-                    if (mountedRef.current) {
-                        setIsPaused(false)
-                    }
-                }, 1000)
-            }
         } catch (error) {
             console.error('Timer finish error:', error)
         } finally {
@@ -103,7 +97,23 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
                 isProcessingRef.current = false
             }, 500)
         }
-    }, [settingsObj.sound, settingsObj.skip, player3, nextStep, clearAllTimers, safeSetState])
+    }, [settingsObj.sound, player3, nextStep, clearAllTimers, safeSetState])
+
+    useEffect(() => {
+        if (justFinished && settingsObj.skip === 'Auto') {
+            const autoSkipTimeout = setTimeout(() => {
+                if (mountedRef.current) {
+                    setIsPaused(false)
+                    setJustFinished(false)
+                }
+            }, 1000)
+
+            return () => clearTimeout(autoSkipTimeout)
+        } else if (justFinished) {
+            setJustFinished(false)
+        }
+    }, [justFinished, settingsObj.skip])
+
 
     useEffect(() => {
         clearAllTimers()

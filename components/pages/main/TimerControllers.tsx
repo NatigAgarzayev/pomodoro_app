@@ -1,10 +1,11 @@
 import { View, Pressable } from 'react-native'
-import React, { useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import Svg, { Rect, Path, G } from 'react-native-svg'
 import clsx from 'clsx'
 import { cssInterop } from 'nativewind'
 import * as Haptics from 'expo-haptics'
 import { useSettingsStore } from '@/stores/settingsStore'
+import { useLofiPlayer } from '@/hooks/useLofiPlayer'
 
 cssInterop(Svg, { className: 'style' })
 cssInterop(Path, {
@@ -26,6 +27,39 @@ interface TimerControllersProps {
 export default function TimerControllers({ pauseTrigger, setPauseTrigger, phaze, isPaused, setIsPaused, nextStep }: TimerControllersProps) {
     const [isDisabled, setIsDisabled] = useState(false)
     const { settings } = useSettingsStore()
+    const [musicHasStarted, setMusicHasStarted] = useState(false)
+    const { player: player2, didJustFinish, playing } = useLofiPlayer()
+
+    useEffect(() => {
+        if (settings.sound === 'System') {
+            Haptics.selectionAsync()
+        }
+        if (settings.lofi === 'Off') return
+        if (!isPaused) {
+            if (!musicHasStarted) {
+                player2.play()
+                setMusicHasStarted(true)
+            } else if (!playing) {
+                player2.play()
+            }
+        } else if (isPaused && playing) {
+            player2.pause()
+        }
+    }, [isPaused])
+
+    useEffect(() => {
+        if (settings.lofi === 'Off') return
+        if (didJustFinish) {
+            player2.seekTo(0)
+            player2.play()
+        }
+    }, [didJustFinish])
+
+    useEffect(() => {
+        if (settings.lofi === "Off") {
+            player2.pause()
+        }
+    }, [settings.lofi])
 
     const handleNextStep = () => {
         nextStep()
