@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import Svg, { Path, Rect } from 'react-native-svg'
-import { CartesianChart, Line } from 'victory-native'
+// import { CartesianChart, Line } from 'victory-native'
 cssInterop(Svg, { className: 'style' })
 cssInterop(Path, {
     className: {
@@ -97,11 +97,11 @@ export default function Statistics({ phaze }: { phaze: string }) {
                     )}>Statistics</Text>
                 </View>
                 <View style={{ height: 300 }}>
-                    <CartesianChart data={DATA} xKey="day" yKeys={["highTmp"]}>
+                    {/* <CartesianChart data={DATA} xKey="day" yKeys={["highTmp"]}>
                         {({ points }) => (
                             <Line points={points.highTmp} color="red" strokeWidth={3} />
                         )}
-                    </CartesianChart>
+                    </CartesianChart> */}
                 </View>
 
             </Animated.ScrollView>

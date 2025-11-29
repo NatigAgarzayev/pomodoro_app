@@ -210,7 +210,7 @@ function Settings({ phaze, step, setStep }: { phaze: string, step: number, setSt
                             <SegmentItem value="Dark">
                                 <Svg
                                     className={clsx({
-                                        'text-pink-primary dark:text-white': phaze === 'work',
+                                        'text-pink-primary': phaze === 'work',
                                         'text-green-primary': phaze === 'short_break',
                                         'text-blue-primary': phaze === 'long_break',
                                     })}
