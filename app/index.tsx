@@ -13,6 +13,7 @@ import { useAudioPlayer } from 'expo-audio'
 import { useColorScheme } from 'nativewind'
 import { useThemeStore } from '@/stores/themeStore'
 import { useSettingsStore } from '@/stores/settingsStore'
+import Statistics from '@/components/pages/statistics/Statistics'
 
 
 const btnPressSource = require('../assets/audio/btn_press.mp3')
@@ -68,6 +69,9 @@ function HomeScreen() {
                 'bg-blue-wall': scenario[settingsObj.stepsMode][step - 1] === 'long_break',
             }
         )}>
+            <View>
+                <Statistics phaze={phaze} />
+            </View>
             <View>
                 <Settings phaze={phaze} step={step} setStep={setStep} />
             </View>
