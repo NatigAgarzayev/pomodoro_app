@@ -401,7 +401,7 @@ function Settings({ phaze, step, setStep }: { phaze: string, step: number, setSt
                             'text-blue-primary': phaze === 'long_break',
                         }
 
-                        )}>Focust time:</Text>
+                        )}>Focus time:</Text>
                         <View className={clsx(
                             'border rounded-full mt-2 overflow-hidden',
                             {
