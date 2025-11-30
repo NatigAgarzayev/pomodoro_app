@@ -1,10 +1,15 @@
 import clsx from 'clsx'
 import { cssInterop } from 'nativewind'
-import React, { useState } from 'react'
-import { Pressable, Text, View } from 'react-native'
+import React, { useState, useMemo, useEffect } from 'react'
+import { Alert, BackHandler, Pressable, Text, View } from 'react-native'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import Svg, { Path, Rect } from 'react-native-svg'
 import { Bar, CartesianChart, Pie, PolarChart } from 'victory-native'
+import { useStatisticsStore } from '@/stores/statisticsStore'
+import { useDoubleBackExit } from '@/hooks/useDoubleBackExit'
+import inter from "../../../assets/inter-medium.ttf"
+import { useFont } from '@shopify/react-native-skia'
+import { Text as SkiaText } from '@shopify/react-native-skia'
 
 cssInterop(Svg, { className: 'style' })
 cssInterop(Path, {
@@ -18,6 +23,11 @@ export default function Statistics({ phaze }: { phaze: string }) {
     const [openPanel, setOpenPanel] = useState(false)
     const [currentWeek, setCurrentWeek] = useState(0) // 0 = current week, -1 = last week, etc.
     const translateX = useSharedValue(100)
+    const handleDoubleBackExit = useDoubleBackExit()
+    const font = useFont(inter, 12)
+
+    // Get statistics from store
+    const { totalCycles, getWeeklyData, getWeeklyTimeByPhase, resetStatistics } = useStatisticsStore()
 
     const handleButtonPress = () => {
         if (openPanel) {
@@ -29,32 +39,51 @@ export default function Statistics({ phaze }: { phaze: string }) {
         }
     }
 
+    useEffect(() => {
+        const backAction = () => {
+            if (openPanel) {
+                handleButtonPress()
+            } else {
+                handleDoubleBackExit()
+            }
+            return true
+        }
+
+        const backHandler = BackHandler.addEventListener(
+            'hardwareBackPress',
+            backAction,
+        )
+
+        return () => backHandler.remove()
+    }, [handleButtonPress, handleDoubleBackExit, openPanel])
+
     const animatedStyle = useAnimatedStyle(() => {
         return {
             transform: [{ translateX: `${translateX.value}%` }],
         }
     })
 
-    // Function to get weekly data based on week offset
-    const getWeeklyFocusData = (weekOffset: number) => {
-        // Replace this with actual data fetching logic
-        return Array.from({ length: 7 }, (_, i) => ({
-            day: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i],
-            minutes: Math.floor(Math.random() * 180) + 30,
+    // Get weekly data for bar chart
+    const WEEKLY_FOCUS_DATA = useMemo(() => {
+        const weeklyData = getWeeklyData(currentWeek)
+        const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+        return weeklyData.days.map((day, index) => ({
+            day: dayNames[index],
+            minutes: day.work, // Only show work/focus time
         }))
-    }
+    }, [currentWeek, getWeeklyData])
 
-    const WEEKLY_FOCUS_DATA = getWeeklyFocusData(currentWeek)
+    // Get phase breakdown for pie chart
+    const PHASE_DATA = useMemo(() => {
+        const phaseTime = getWeeklyTimeByPhase(currentWeek)
 
-    // Phase breakdown data (in minutes)
-    const PHASE_DATA = [
-        { label: 'Focus', value: 450, color: '#EF4444' },
-        { label: 'Short Break', value: 180, color: '#10B981' },
-        { label: 'Long Break', value: 90, color: '#3B82F6' },
-    ]
-
-    // Total cycles completed
-    const totalCycles = 42
+        return [
+            { label: 'Focus', value: phaseTime.work, color: '#EF4444' },
+            { label: 'Short Break', value: phaseTime.short_break, color: '#10B981' },
+            { label: 'Long Break', value: phaseTime.long_break, color: '#3B82F6' },
+        ]
+    }, [currentWeek, getWeeklyTimeByPhase])
 
     // Get color based on phase
     const getPhaseColor = () => {
@@ -83,6 +112,38 @@ export default function Statistics({ phaze }: { phaze: string }) {
         }
     }
 
+    const handleReset = () => {
+        Alert.alert(
+            "Reset Statistics",
+            "Are you sure you want to delete all statistics? This cannot be undone.",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Reset",
+                    style: "destructive",
+                    onPress: () => resetStatistics()
+                }
+            ]
+        )
+    }
+
+    // Calculate total time for the week
+    const totalWeekTime = useMemo(() => {
+        return PHASE_DATA.reduce((sum, phase) => sum + phase.value, 0)
+    }, [PHASE_DATA])
+
+    // Format minutes to hours and minutes
+    const formatTime = (minutes: number) => {
+        if (minutes === 0) return '0m'
+        const hours = Math.floor(minutes / 60)
+        const mins = minutes % 60
+        if (hours === 0) return `${mins}m`
+        if (mins === 0) return `${hours}h`
+        return `${hours}h ${mins}m`
+    }
+
+    console.log("WEEKLY_FOCUS_DATA", WEEKLY_FOCUS_DATA)
+
     return (
         <>
             <Pressable
@@ -108,7 +169,7 @@ export default function Statistics({ phaze }: { phaze: string }) {
             <Animated.ScrollView
                 style={[animatedStyle]}
                 className={clsx(
-                    'shadow-lg w-full h-screen absolute top-0 z-50 right-0',
+                    'shadow-lg px-4 w-full h-screen absolute top-0 z-50 right-0',
                     {
                         'bg-pink-wall': phaze === 'work',
                         'bg-green-wall': phaze === 'short_break',
@@ -120,7 +181,7 @@ export default function Statistics({ phaze }: { phaze: string }) {
                 {/* Header */}
                 <View
                     className={clsx(
-                        'flex-row items-center gap-2 justify-start px-6 pt-6 pb-3',
+                        'flex-row items-center gap-2 justify-start pt-6 pb-3',
                         {
                             'bg-pink-wall': phaze === 'work',
                             'bg-green-wall': phaze === 'short_break',
@@ -147,21 +208,37 @@ export default function Statistics({ phaze }: { phaze: string }) {
                 </View>
 
                 {/* Total Cycles Card */}
-                <View className='mx-6 mt-4 mb-6 p-6 bg-white rounded-2xl shadow-sm'>
-                    <Text className='text-gray-500 text-sm mb-1'>Total Cycles Completed</Text>
+                <View>
                     <Text className={clsx(
-                        'text-5xl font-bold',
+                        'text-lg font-semibold',
                         {
                             'text-pink-primary': phaze === 'work',
                             'text-green-primary': phaze === 'short_break',
                             'text-blue-primary': phaze === 'long_break',
                         }
-                    )}>{totalCycles}</Text>
-                    <Text className='text-gray-400 text-xs mt-1'>All time</Text>
+                    )}>Total Cycles Completed</Text>
+                    <View
+                        className={clsx('mt-2 mb-6 p-6 rounded-2xl',
+                            {
+                                'bg-pink-secondary': phaze === 'work',
+                                'bg-green-secondary': phaze === 'short_break',
+                                'bg-blue-secondary': phaze === 'long_break',
+                            }
+                        )}
+                    >
+                        <Text className={clsx(
+                            'text-5xl font-bold',
+                            {
+                                'text-pink-primary': phaze === 'work',
+                                'text-green-primary': phaze === 'short_break',
+                                'text-blue-primary': phaze === 'long_break',
+                            }
+                        )}>{totalCycles}</Text>
+                    </View>
                 </View>
 
                 {/* Weekly Focus Time Chart with Navigation */}
-                <View className='mx-6 mb-6'>
+                <View className='mb-6'>
                     <View className='flex-row items-center justify-between mb-3'>
                         <Text className={clsx(
                             'text-lg font-semibold',
@@ -192,7 +269,16 @@ export default function Statistics({ phaze }: { phaze: string }) {
                                 </Svg>
                             </Pressable>
 
-                            <Text className='text-sm text-gray-600 min-w-24 text-center'>
+                            <Text
+                                className={clsx(
+                                    'text-sm min-w-24 text-center',
+                                    {
+                                        'text-pink-primary': phaze === 'work',
+                                        'text-green-primary': phaze === 'short_break',
+                                        'text-blue-primary': phaze === 'long_break',
+                                    }
+                                )}
+                            >
                                 {getWeekLabel()}
                             </Text>
 
@@ -221,29 +307,68 @@ export default function Statistics({ phaze }: { phaze: string }) {
                         </View>
                     </View>
 
-                    <View className='bg-white rounded-2xl p-4 shadow-sm' style={{ height: 280 }}>
-                        <CartesianChart
-                            data={WEEKLY_FOCUS_DATA}
-                            xKey="day"
-                            yKeys={["minutes"]}
-                            padding={{ left: 10, right: 10, top: 10, bottom: 10 }}
-                        >
-                            {({ points, chartBounds }) => (
-                                <Bar
-                                    points={points.minutes}
-                                    chartBounds={chartBounds}
-                                    color={getPhaseColor()}
-                                    roundedCorners={{ topLeft: 8, topRight: 8 }}
-                                    barWidth={32}
-                                />
-                            )}
-                        </CartesianChart>
-                        <Text className='text-center text-gray-400 text-xs mt-2'>Minutes per day</Text>
+                    <View
+                        className={clsx(
+                            'rounded-',
+                            {
+                                'bg-pink-secondary': phaze === 'work',
+                                'bg-green-secondary': phaze === 'short_break',
+                                'bg-blue-secondary': phaze === 'long_break',
+                            }
+                        )}
+                        style={{ height: 280 }}>
+                        {WEEKLY_FOCUS_DATA.some(d => d.minutes > 0) ? (
+                            <>
+                                <CartesianChart
+                                    data={WEEKLY_FOCUS_DATA}
+                                    xKey="day"
+                                    yKeys={["minutes"]}
+                                    padding={{ left: 20, right: 20, top: 20, bottom: 30 }}
+                                    domainPadding={{ left: 20, right: 20, top: 20 }}
+                                    axisOptions={{ font }}
+                                >
+                                    {({ points, chartBounds }) => (
+                                        <>
+                                            <Bar
+                                                points={points.minutes}
+                                                chartBounds={chartBounds}
+                                                color={getPhaseColor()}
+                                                roundedCorners={{ topLeft: 8, topRight: 8 }}
+                                                barWidth={32}
+                                            />
+                                            {/* Labels on top of bars */}
+                                            {points.minutes.map((point, index) => {
+                                                const value = WEEKLY_FOCUS_DATA[index].minutes
+                                                if (value === 0) return null
+
+                                                const text = String(value)
+                                                const textWidth = font?.measureText(text).width || 0
+
+                                                return (
+                                                    <SkiaText
+                                                        key={index}
+                                                        x={point.x - textWidth / 2}
+                                                        y={point.y - 4}
+                                                        text={text}
+                                                        font={font}
+                                                        color={getPhaseColor()}
+                                                    />
+                                                )
+                                            })}
+                                        </>
+                                    )}
+                                </CartesianChart>
+                            </>
+                        ) : (
+                            <View className='flex-1 items-center justify-center'>
+                                <Text className='text-gray-400 text-center'>No data for this week</Text>
+                            </View>
+                        )}
                     </View>
                 </View>
 
                 {/* Phase Breakdown Pie Chart */}
-                <View className='mx-6 mb-8'>
+                <View className='mb-8'>
                     <Text className={clsx(
                         'text-lg font-semibold mb-3',
                         {
@@ -252,39 +377,88 @@ export default function Statistics({ phaze }: { phaze: string }) {
                             'text-blue-primary': phaze === 'long_break',
                         }
                     )}>Weekly Time Breakdown</Text>
-                    <View className='bg-white rounded-2xl p-4 shadow-sm' style={{ height: 320 }}>
-                        <View style={{ height: 200, alignItems: 'center', justifyContent: 'center' }}>
-                            <PolarChart
-                                data={PHASE_DATA}
-                                labelKey="label"
-                                valueKey="value"
-                                colorKey="color"
-                            >
-                                <Pie.Chart innerRadius={50} />
-                            </PolarChart>
-                        </View>
-
-                        {/* Legend */}
-                        <View className='mt-4 space-y-2'>
-                            {PHASE_DATA.map((item, index) => (
-                                <View key={index} className='flex-row items-center justify-between'>
-                                    <View className='flex-row items-center gap-2'>
-                                        <View
-                                            style={{ backgroundColor: item.color }}
-                                            className='w-3 h-3 rounded-full'
-                                        />
-                                        <Text className='text-gray-700 text-sm'>{item.label}</Text>
-                                    </View>
-                                    <Text className='text-gray-500 text-sm font-medium'>
-                                        {item.value} min
-                                    </Text>
+                    <View
+                        className={clsx(
+                            'rounded-2xl p-4 pt-6',
+                            {
+                                'bg-pink-secondary': phaze === 'work',
+                                'bg-green-secondary': phaze === 'short_break',
+                                'bg-blue-secondary': phaze === 'long_break',
+                            }
+                        )}
+                        style={{ height: 320 }}>
+                        {totalWeekTime > 0 ? (
+                            <>
+                                <View style={{ height: 200, width: '100%' }}>
+                                    <PolarChart
+                                        data={PHASE_DATA.filter(d => d.value > 0)}
+                                        labelKey="label"
+                                        valueKey="value"
+                                        colorKey="color"
+                                    >
+                                        <Pie.Chart innerRadius={50} />
+                                    </PolarChart>
                                 </View>
-                            ))}
-                        </View>
+
+                                {/* Legend */}
+                                <View className='mt-4 space-y-2'>
+                                    {PHASE_DATA.map((item, index) => (
+                                        <View key={index} className='flex-row items-center justify-between'>
+                                            <View className='flex-row items-center gap-2'>
+                                                <View
+                                                    style={{ backgroundColor: item.color }}
+                                                    className='w-3 h-3 rounded-full'
+                                                />
+                                                <Text
+                                                    className={clsx(
+                                                        'text-sm',
+                                                        {
+                                                            'text-pink-primary': phaze === 'work',
+                                                            'text-green-primary': phaze === 'short_break',
+                                                            'text-blue-primary': phaze === 'long_break',
+                                                        }
+                                                    )}
+                                                >{item.label}</Text>
+                                            </View>
+                                            <Text
+                                                className={clsx(
+                                                    'text-sm font-medium',
+                                                    {
+                                                        'text-pink-primary': phaze === 'work',
+                                                        'text-green-primary': phaze === 'short_break',
+                                                        'text-blue-primary': phaze === 'long_break',
+                                                    }
+                                                )}>
+                                                {formatTime(item.value)}
+                                            </Text>
+                                        </View>
+                                    ))}
+                                </View>
+                            </>
+                        ) : (
+                            <View className='flex-1 items-center justify-center'>
+                                <Text className='text-gray-400 text-center'>No data for this week</Text>
+                            </View>
+                        )}
                     </View>
                 </View>
-
-            </Animated.ScrollView>
+                <Pressable onPress={handleReset} className={clsx('w-full h-12 flex justify-center items-center rounded-3xl mb-6',
+                    {
+                        'bg-pink-button': phaze === 'work',
+                        'bg-green-button': phaze === 'short_break',
+                        'bg-blue-button': phaze === 'long_break',
+                    }
+                )}>
+                    <Text className={clsx(
+                        'text-lg font-semibold',
+                        {
+                            'text-pink-primary': phaze === 'work',
+                            'text-green-primary': phaze === 'short_break',
+                            'text-blue-primary': phaze === 'long_break',
+                        }
+                    )}>Reset All Statistics</Text>
+                </Pressable>
+            </Animated.ScrollView >
         </>
     )
 }

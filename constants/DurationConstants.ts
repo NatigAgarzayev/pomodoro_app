@@ -1,4 +1,5 @@
 export const QUICK_TIMES = [
+    { label: '6s', value: 6 },
     { label: '30s', value: 30 },
     { label: '1m', value: 60 },
     { label: '5m', value: 300 },

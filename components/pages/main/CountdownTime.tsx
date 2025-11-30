@@ -4,7 +4,9 @@ import clsx from 'clsx'
 import { useAudioPlayer } from 'expo-audio'
 import * as Haptics from 'expo-haptics'
 import { useSettingsStore } from '@/stores/settingsStore'
+import { useStatisticsStore } from '@/stores/statisticsStore'
 import { AppState } from 'react-native'
+import type { PhaseType } from '@/stores/statisticsStore'
 
 const endSound = require('../../../assets/audio/time_ended.mp3')
 
@@ -21,6 +23,7 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
     const phaze = scenario[step] || 'work'
     const transformedPhaze = phaze === 'work' ? 'focusDuration' : phaze === 'short_break' ? 'shortBreakDuration' : 'longBreakDuration'
     const { settings: settingsObj } = useSettingsStore()
+    const { startSession, endSession, incrementCycles } = useStatisticsStore()
 
     const [timeLeft, setTimeLeft] = useState<number>(Number(settingsObj[transformedPhaze]))
     const [startTime, setStartTime] = useState<number | null>(null)
@@ -32,10 +35,21 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
     const pauseStartRef = useRef<number | null>(null)
     const isProcessingRef = useRef<boolean>(false)
     const mountedRef = useRef<boolean>(true)
+    const sessionStartTimeRef = useRef<number | null>(null) // Track session start for statistics
 
     const player3 = useAudioPlayer(endSound)
 
     const duration = useMemo(() => Number(settingsObj[transformedPhaze]), [settingsObj, transformedPhaze])
+
+    // Convert phaze to PhaseType
+    const getPhaseType = useCallback((): PhaseType => {
+        switch (phaze) {
+            case 'work': return 'work'
+            case 'short_break': return 'short_break'
+            case 'long_break': return 'long_break'
+            default: return 'work'
+        }
+    }, [phaze])
 
     const clearAllTimers = useCallback(() => {
         if (intervalRef.current) {
@@ -70,6 +84,17 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
         try {
             clearAllTimers()
 
+            // End statistics session and log the completed time
+            if (sessionStartTimeRef.current) {
+                endSession()
+                sessionStartTimeRef.current = null
+            }
+
+            // Increment cycle count when full cycle completes (at the end of long break)
+            if (phaze === 'long_break') {
+                incrementCycles()
+            }
+
             if (settingsObj.sound === 'System') {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
             }
@@ -97,7 +122,7 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
                 isProcessingRef.current = false
             }, 500)
         }
-    }, [settingsObj.sound, player3, nextStep, clearAllTimers, safeSetState])
+    }, [settingsObj.sound, player3, nextStep, clearAllTimers, safeSetState, phaze, endSession, incrementCycles])
 
     useEffect(() => {
         if (justFinished && settingsObj.skip === 'Auto') {
@@ -113,7 +138,6 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
             setJustFinished(false)
         }
     }, [justFinished, settingsObj.skip])
-
 
     useEffect(() => {
         clearAllTimers()
@@ -172,6 +196,12 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
         clearAllTimers()
         isProcessingRef.current = false
 
+        // End session on reset
+        if (sessionStartTimeRef.current) {
+            endSession()
+            sessionStartTimeRef.current = null
+        }
+
         safeSetState(() => {
             setTimeLeft(duration)
             setStartTime(null)
@@ -179,7 +209,7 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
             pauseStartRef.current = null
             setIsPaused(true)
         })
-    }, [step, phaze, pauseTrigger, duration, clearAllTimers, safeSetState])
+    }, [step, phaze, pauseTrigger, duration, clearAllTimers, safeSetState, endSession])
 
     useEffect(() => {
         if (isPaused && !startTime && mountedRef.current) {
@@ -187,13 +217,27 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
         }
     }, [duration, isPaused, startTime, safeSetState])
 
+    // Track statistics session - SIMPLIFIED VERSION
+    useEffect(() => {
+        // Start session when timer starts running
+        if (!isPaused && startTime && !sessionStartTimeRef.current) {
+            startSession(getPhaseType())
+            sessionStartTimeRef.current = Date.now()
+        }
+    }, [isPaused, startTime, startSession, getPhaseType])
+
     useEffect(() => {
         return () => {
             mountedRef.current = false
             clearAllTimers()
             isProcessingRef.current = false
+            // Clean up session on unmount
+            if (sessionStartTimeRef.current) {
+                endSession()
+                sessionStartTimeRef.current = null
+            }
         }
-    }, [clearAllTimers])
+    }, [clearAllTimers, endSession])
 
     const formatTime = useCallback((totalSeconds: number) => {
         const minutes = Math.floor(totalSeconds / 60)
