@@ -311,7 +311,7 @@ export default function Statistics({ phaze }: { phaze: string }) {
 
                     <View
                         className={clsx(
-                            'rounded-',
+                            'rounded-2xl',
                             {
                                 'bg-pink-secondary': phaze === 'work',
                                 'bg-green-secondary': phaze === 'short_break',
