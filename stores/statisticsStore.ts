@@ -226,7 +226,11 @@ export const useStatisticsStore = create<StatisticsStore>()(
             },
 
             resetStatistics: () => {
-                set(initialState)
+                set((state) => {
+                    state.statsUpdateFlag()
+                    return initialState
+                })
+
             },
         }),
         {
