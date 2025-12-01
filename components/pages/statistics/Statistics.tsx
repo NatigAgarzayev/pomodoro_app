@@ -10,6 +10,7 @@ import { useDoubleBackExit } from '@/hooks/useDoubleBackExit'
 import inter from "../../../assets/inter-medium.ttf"
 import { useFont } from '@shopify/react-native-skia'
 import { Text as SkiaText } from '@shopify/react-native-skia'
+import CustomBar from './CustomBar'
 
 cssInterop(Svg, { className: 'style' })
 cssInterop(Path, {
@@ -142,7 +143,7 @@ export default function Statistics({ phaze }: { phaze: string }) {
         return `${hours}h ${mins}m`
     }
 
-    console.log("WEEKLY_FOCUS_DATA", WEEKLY_FOCUS_DATA)
+    // console.log("WEEKLY_FOCUS_DATA", WEEKLY_FOCUS_DATA)
 
     return (
         <>
@@ -325,17 +326,11 @@ export default function Statistics({ phaze }: { phaze: string }) {
                                     yKeys={["minutes"]}
                                     padding={{ left: 20, right: 20, top: 20, bottom: 30 }}
                                     domainPadding={{ left: 20, right: 20, top: 20 }}
-                                    axisOptions={{ font }}
+                                    axisOptions={{ font, labelColor: getPhaseColor() }}
                                 >
                                     {({ points, chartBounds }) => (
                                         <>
-                                            <Bar
-                                                points={points.minutes}
-                                                chartBounds={chartBounds}
-                                                color={getPhaseColor()}
-                                                roundedCorners={{ topLeft: 8, topRight: 8 }}
-                                                barWidth={32}
-                                            />
+                                            <CustomBar points={points.minutes} chartBounds={chartBounds} color={getPhaseColor()} />
                                             {/* Labels on top of bars */}
                                             {points.minutes.map((point, index) => {
                                                 const value = WEEKLY_FOCUS_DATA[index].minutes
