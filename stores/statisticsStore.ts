@@ -110,7 +110,15 @@ export const useStatisticsStore = create<StatisticsStore>()(
             endSession: () => {
                 const state = get()
                 if (state.currentSessionStart && state.currentPhase) {
-                    const duration = Math.ceil((Date.now() - state.currentSessionStart) / 60000) // Convert to minutes
+                    let duration = (Date.now() - state.currentSessionStart) / 1000
+                    if (duration < 60) {
+                        duration = Number((duration / 60).toFixed(1))
+                    }
+                    else {
+                        duration = Math.floor(duration / 60)
+                    }
+                    console.log("duration", duration)
+
                     get().logTime(state.currentPhase, duration)
                 }
                 set({
