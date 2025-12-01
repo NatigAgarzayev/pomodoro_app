@@ -28,7 +28,8 @@ export default function Statistics({ phaze }: { phaze: string }) {
     const font = useFont(inter, 12)
 
     // Get statistics from store
-    const { totalCycles, getWeeklyData, getWeeklyTimeByPhase, resetStatistics } = useStatisticsStore()
+    const { totalCycles, getWeeklyData, getWeeklyTimeByPhase, resetStatistics, statsUpdated } = useStatisticsStore()
+
 
     const handleButtonPress = () => {
         if (openPanel) {
@@ -73,7 +74,7 @@ export default function Statistics({ phaze }: { phaze: string }) {
             day: dayNames[index],
             minutes: day.work, // Only show work/focus time
         }))
-    }, [currentWeek, getWeeklyData])
+    }, [currentWeek, statsUpdated])
 
     // Get phase breakdown for pie chart
     const PHASE_DATA = useMemo(() => {
@@ -84,7 +85,7 @@ export default function Statistics({ phaze }: { phaze: string }) {
             { label: 'Short Break', value: phaseTime.short_break, color: '#10B981' },
             { label: 'Long Break', value: phaseTime.long_break, color: '#3B82F6' },
         ]
-    }, [currentWeek, getWeeklyTimeByPhase])
+    }, [currentWeek, statsUpdated])
 
     // Get color based on phase
     const getPhaseColor = () => {
@@ -143,7 +144,7 @@ export default function Statistics({ phaze }: { phaze: string }) {
         return `${hours}h ${mins}m`
     }
 
-    // console.log("WEEKLY_FOCUS_DATA", WEEKLY_FOCUS_DATA)
+    console.log("WEEKLY_FOCUS_DATA", WEEKLY_FOCUS_DATA)
 
     return (
         <>

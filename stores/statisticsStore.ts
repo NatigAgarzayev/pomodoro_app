@@ -34,6 +34,7 @@ export interface WeeklyStats {
 }
 
 export interface StatisticsState {
+    statsUpdated: boolean
     totalCycles: number // Total cycles completed all time
     dailyStats: { [date: string]: DailyStats } // Keyed by date string
     currentSessionStart: number | null // Timestamp when current session started
@@ -41,6 +42,8 @@ export interface StatisticsState {
 }
 
 interface StatisticsStore extends StatisticsState {
+    // Flag
+    statsUpdateFlag: () => void
     // Cycle tracking
     incrementCycles: () => void
 
@@ -83,6 +86,7 @@ const getWeekDates = (weekStart: Date): string[] => {
 }
 
 const initialState: StatisticsState = {
+    statsUpdated: false,
     totalCycles: 0,
     dailyStats: {},
     currentSessionStart: null,
@@ -93,6 +97,12 @@ export const useStatisticsStore = create<StatisticsStore>()(
     persist(
         (set, get) => ({
             ...initialState,
+
+            statsUpdateFlag: () => {
+                set((state) => ({
+                    statsUpdated: !state.statsUpdated
+                }))
+            },
 
             incrementCycles: () => {
                 set((state) => ({
@@ -110,16 +120,18 @@ export const useStatisticsStore = create<StatisticsStore>()(
             endSession: () => {
                 const state = get()
                 if (state.currentSessionStart && state.currentPhase) {
-                    let duration = (Date.now() - state.currentSessionStart) / 1000
-                    if (duration < 60) {
-                        duration = Number((duration / 60).toFixed(1))
-                    }
-                    else {
-                        duration = Math.floor(duration / 60)
-                    }
-                    console.log("duration", duration)
+                    const durationInSeconds = (Date.now() - state.currentSessionStart) / 1000
 
-                    get().logTime(state.currentPhase, duration)
+                    let durationInMinutes = durationInSeconds / 60
+
+                    if (durationInMinutes < 1) {
+                        durationInMinutes = Math.round(durationInMinutes * 10) / 10  // 0.5, 0.8, etc.
+                    } else {
+                        durationInMinutes = Math.floor(durationInMinutes)  // 1, 2, 3, etc.
+                    }
+
+                    console.log("duration (minutes)", durationInMinutes)
+                    get().logTime(state.currentPhase, durationInMinutes)
                 }
                 set({
                     currentSessionStart: null,
@@ -138,12 +150,16 @@ export const useStatisticsStore = create<StatisticsStore>()(
                         long_break: 0,
                     }
 
+                    // Round the result to avoid floating-point errors
+                    const newValue = Math.round((existingStats[phase] + minutes) * 10) / 10
+
+                    state.statsUpdateFlag()
                     return {
                         dailyStats: {
                             ...state.dailyStats,
                             [dateStr]: {
                                 ...existingStats,
-                                [phase]: existingStats[phase] + minutes,
+                                [phase]: newValue,
                             },
                         },
                     }
