@@ -8,13 +8,36 @@
         "icon": "./assets/splashlightfixed.png",
         "userInterfaceStyle": "automatic",
         "newArchEnabled": true,
+        "splash": {
+            "image": "./assets/splashlightfixed.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#ffffff"
+        },
         "ios": {
-            "supportsTablet": true
+            "supportsTablet": true,
+            "splash": {
+                "image": "./assets/splashlightfixed.png",
+                "resizeMode": "contain",
+                "backgroundColor": "#ffffff",
+                "dark": {
+                    "image": "./assets/splashdarkfixed.png",
+                    "backgroundColor": "#000000"
+                }
+            }
         },
         "android": {
             "adaptiveIcon": {
                 "foregroundImage": "./assets/splashlightfixed.png",
                 "backgroundColor": "#ffffff"
+            },
+            "splash": {
+                "image": "./assets/splashlightfixed.png",
+                "resizeMode": "contain",
+                "backgroundColor": "#ffffff",
+                "dark": {
+                    "image": "./assets/splashdarkfixed.png",
+                    "backgroundColor": "#000000"
+                }
             },
             "edgeToEdgeEnabled": true,
             "predictiveBackGestureEnabled": false,
@@ -30,18 +53,7 @@
         "plugins": [
             "expo-router",
             "expo-audio",
-            [
-                "expo-splash-screen",
-                {
-                    "backgroundColor": "#ffffff",
-                    "image": "./assets/splashlightfixed.png",
-                    "dark": {
-                        "image": "./assets/splashdarkfixed.png",
-                        "backgroundColor": "#000000"
-                    },
-                    "imageWidth": 200
-                }
-            ]
+            "expo-splash-screen"
         ],
         "extra": {
             "router": {},
