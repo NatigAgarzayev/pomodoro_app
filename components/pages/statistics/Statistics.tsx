@@ -134,17 +134,20 @@ export default function Statistics({ phaze }: { phaze: string }) {
         return PHASE_DATA.reduce((sum, phase) => sum + phase.value, 0)
     }, [PHASE_DATA])
 
-    // Format minutes to hours and minutes
     const formatTime = (minutes: number) => {
         if (minutes === 0) return '0m'
+
+        if (minutes < 1) {
+            return `${minutes.toFixed(1)}m`
+        }
+
         const hours = Math.floor(minutes / 60)
-        const mins = minutes % 60
+        const mins = Math.round(minutes % 60)
+
         if (hours === 0) return `${mins}m`
         if (mins === 0) return `${hours}h`
         return `${hours}h ${mins}m`
     }
-
-    console.log("WEEKLY_FOCUS_DATA", WEEKLY_FOCUS_DATA)
 
     return (
         <>
@@ -337,7 +340,7 @@ export default function Statistics({ phaze }: { phaze: string }) {
                                                 const value = WEEKLY_FOCUS_DATA[index].minutes
                                                 if (value === 0) return null
 
-                                                const text = String(value)
+                                                const text = String(formatTime(value))
                                                 const textWidth = font?.measureText(text).width || 0
 
                                                 return (

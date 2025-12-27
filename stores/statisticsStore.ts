@@ -130,7 +130,6 @@ export const useStatisticsStore = create<StatisticsStore>()(
                         durationInMinutes = Math.floor(durationInMinutes)  // 1, 2, 3, etc.
                     }
 
-                    console.log("duration (minutes)", durationInMinutes)
                     get().logTime(state.currentPhase, durationInMinutes)
                 }
                 set({
