@@ -330,7 +330,8 @@ export default function Statistics({ phaze }: { phaze: string }) {
                                     yKeys={["minutes"]}
                                     padding={{ left: 20, right: 20, top: 20, bottom: 30 }}
                                     domainPadding={{ left: 20, right: 20, top: 20 }}
-                                    axisOptions={{ font, labelColor: getPhaseColor() }}
+                                    axisOptions={{ font, labelColor: getPhaseColor(), lineColor: 'transparent', lineWidth: 0, formatYLabel: (value) => `${value}m` }}
+                                    frame={{ lineWidth: 0 }}
                                 >
                                     {({ points, chartBounds }) => (
                                         <>
@@ -347,7 +348,7 @@ export default function Statistics({ phaze }: { phaze: string }) {
                                                     <SkiaText
                                                         key={index}
                                                         x={point.x - textWidth / 2}
-                                                        y={point.y - 4}
+                                                        y={point.y - 6}
                                                         text={text}
                                                         font={font}
                                                         color={getPhaseColor()}

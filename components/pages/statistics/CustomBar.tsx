@@ -8,7 +8,7 @@ export default function CustomBar(
         points,
         chartBounds,
         barWidth = 32,
-        cornerRadius = 8,
+        cornerRadius = 36,
     }: {
         color: string,
         points: PointsArray
@@ -27,6 +27,8 @@ export default function CustomBar(
             roundedCorners={{
                 topLeft: cornerRadius,
                 topRight: cornerRadius,
+                bottomLeft: cornerRadius,
+                bottomRight: cornerRadius,
             }}
         />
     )
