@@ -335,7 +335,11 @@ export default function Statistics({ phaze }: { phaze: string }) {
                                 >
                                     {({ points, chartBounds }) => (
                                         <>
-                                            <CustomBar points={points.minutes} chartBounds={chartBounds} color={getPhaseColor()} />
+                                            <CustomBar
+                                                points={points.minutes}
+                                                chartBounds={chartBounds}
+                                                color={getPhaseColor()}
+                                            />
                                             {/* Labels on top of bars */}
                                             {points.minutes.map((point, index) => {
                                                 const value = WEEKLY_FOCUS_DATA[index].minutes
