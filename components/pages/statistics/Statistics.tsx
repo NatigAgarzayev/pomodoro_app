@@ -328,7 +328,7 @@ export default function Statistics({ phaze }: { phaze: string }) {
                                     data={WEEKLY_FOCUS_DATA}
                                     xKey="day"
                                     yKeys={["minutes"]}
-                                    padding={{ left: 20, right: 20, top: 20, bottom: 30 }}
+                                    padding={{ left: 20, right: 20, top: 30, bottom: 20 }}
                                     domainPadding={{ left: 20, right: 20, top: 20 }}
                                     axisOptions={{ font, labelColor: getPhaseColor(), lineColor: 'transparent', lineWidth: 0, formatYLabel: (value) => `${value}m` }}
                                     frame={{ lineWidth: 0 }}
