@@ -1,14 +1,16 @@
 import { View, Text } from 'react-native'
-import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import clsx from 'clsx'
 import { useAudioPlayer } from 'expo-audio'
 import * as Haptics from 'expo-haptics'
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useStatisticsStore } from '@/stores/statisticsStore'
 import { AppState } from 'react-native'
 import type { PhaseType } from '@/stores/statisticsStore'
 
 const endSound = require('../../../assets/audio/time_ended.mp3')
+const KEEP_AWAKE_TAG = 'pomodoro-timer-running'
 
 interface CountdownTimeProps {
     step: number,
@@ -22,222 +24,163 @@ interface CountdownTimeProps {
 function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, nextStep }: CountdownTimeProps) {
     const phaze = scenario[step] || 'work'
     const transformedPhaze = phaze === 'work' ? 'focusDuration' : phaze === 'short_break' ? 'shortBreakDuration' : 'longBreakDuration'
-    const { settings: settingsObj } = useSettingsStore()
-    const { startSession, endSession, incrementCycles } = useStatisticsStore()
+    const settingsObj = useSettingsStore(state => state.settings)
+    const startSession = useStatisticsStore(state => state.startSession)
+    const endSession = useStatisticsStore(state => state.endSession)
+    const incrementCycles = useStatisticsStore(state => state.incrementCycles)
+    const duration = Number(settingsObj[transformedPhaze])
 
-    const [timeLeft, setTimeLeft] = useState<number>(Number(settingsObj[transformedPhaze]))
-    const [startTime, setStartTime] = useState<number | null>(null)
-    const [pausedTime, setPausedTime] = useState<number>(0)
-    const [justFinished, setJustFinished] = useState(false)
-
-    const intervalRef = useRef<NodeJS.Timeout | null>(null)
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null)
-    const pauseStartRef = useRef<number | null>(null)
-    const isProcessingRef = useRef<boolean>(false)
-    const mountedRef = useRef<boolean>(true)
-    const sessionStartTimeRef = useRef<number | null>(null) // Track session start for statistics
-
+    const [timeLeft, setTimeLeft] = useState<number>(duration)
     const player3 = useAudioPlayer(endSound)
 
-    const duration = useMemo(() => Number(settingsObj[transformedPhaze]), [settingsObj, transformedPhaze])
+    // The interval only ever reads these through refs, so changing them
+    // never needs to tear down and recreate the interval or the AppState
+    // subscription - that churn (previously happening every single tick)
+    // was the source of the long-running-session instability.
+    const endAtRef = useRef<number | null>(null)
+    const remainingRef = useRef<number>(duration)
+    const sessionStartedRef = useRef(false)
+    const finishingRef = useRef(false)
+    const settingsRef = useRef(settingsObj)
+    const phazeRef = useRef(phaze)
+    const nextStepRef = useRef(nextStep)
+    const playerRef = useRef(player3)
 
-    // Convert phaze to PhaseType
+    settingsRef.current = settingsObj
+    phazeRef.current = phaze
+    nextStepRef.current = nextStep
+    playerRef.current = player3
+
     const getPhaseType = useCallback((): PhaseType => {
-        switch (phaze) {
+        switch (phazeRef.current) {
             case 'work': return 'work'
             case 'short_break': return 'short_break'
             case 'long_break': return 'long_break'
             default: return 'work'
         }
-    }, [phaze])
-
-    const clearAllTimers = useCallback(() => {
-        if (intervalRef.current) {
-            clearInterval(intervalRef.current)
-            intervalRef.current = null
-        }
-        if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current)
-            timeoutRef.current = null
-        }
     }, [])
 
-    const safeSetState = useCallback((setter: () => void) => {
-        if (mountedRef.current) {
-            setter()
+    const finishPhase = useCallback(() => {
+        if (finishingRef.current) return
+        finishingRef.current = true
+        endAtRef.current = null
+
+        if (sessionStartedRef.current) {
+            endSession()
+            sessionStartedRef.current = false
         }
-    }, [])
 
-    const calculateTimeLeft = useCallback(() => {
-        if (!startTime) return timeLeft
+        const wasFullCycleEnd = phazeRef.current === 'long_break'
+        if (wasFullCycleEnd) {
+            incrementCycles()
+        }
 
-        const now = Date.now()
-        const elapsed = Math.floor((now - startTime - pausedTime) / 1000)
-        const remaining = Math.max(0, duration - elapsed)
-        return remaining
-    }, [startTime, timeLeft, pausedTime, duration])
-
-    const handleTimerFinish = useCallback(() => {
-        if (isProcessingRef.current) return
-        isProcessingRef.current = true
-
-        try {
-            clearAllTimers()
-
-            // End statistics session and log the completed time
-            if (sessionStartTimeRef.current) {
-                endSession()
-                sessionStartTimeRef.current = null
+        const currentSettings = settingsRef.current
+        if (currentSettings.sound === 'System') {
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+        }
+        if (currentSettings.sound === 'On') {
+            try {
+                playerRef.current.seekTo(0)
+                playerRef.current.play()
+            } catch (error) {
+                console.warn('Audio play error:', error)
             }
+        }
 
-            // Increment cycle count when full cycle completes (at the end of long break)
-            if (phaze === 'long_break') {
-                incrementCycles()
-            }
+        setTimeLeft(0)
+        nextStepRef.current()
 
-            if (settingsObj.sound === 'System') {
-                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-            }
-            if (settingsObj.sound === 'On') {
-                try {
-                    player3.seekTo(0)
-                    player3.play()
-                } catch (error) {
-                    console.warn('Audio play error:', error)
-                }
-            }
-
-            safeSetState(() => {
-                setStartTime(null)
-                setPausedTime(0)
-                pauseStartRef.current = null
-                setJustFinished(true)
-            })
-
-            nextStep()
-        } catch (error) {
-            console.error('Timer finish error:', error)
-        } finally {
+        // Auto-skip only carries into the next step within the same cycle.
+        // A full cycle ending (long_break finishing, wrapping back to step 1)
+        // always requires a manual start for the next cycle.
+        if (currentSettings.skip === 'Auto' && !wasFullCycleEnd) {
             setTimeout(() => {
-                isProcessingRef.current = false
-            }, 500)
-        }
-    }, [settingsObj.sound, player3, nextStep, clearAllTimers, safeSetState, phaze, endSession, incrementCycles])
-
-    useEffect(() => {
-        if (justFinished && settingsObj.skip === 'Auto') {
-            const autoSkipTimeout = setTimeout(() => {
-                if (mountedRef.current) {
-                    setIsPaused(false)
-                    setJustFinished(false)
-                }
+                finishingRef.current = false
+                setIsPaused(false)
             }, 1000)
-
-            return () => clearTimeout(autoSkipTimeout)
-        } else if (justFinished) {
-            setJustFinished(false)
+        } else {
+            finishingRef.current = false
         }
-    }, [justFinished, settingsObj.skip])
+    }, [endSession, incrementCycles, setIsPaused])
 
+    // Reset the clock whenever the phase changes or an explicit reset
+    // (pauseTrigger) is requested.
     useEffect(() => {
-        clearAllTimers()
+        endAtRef.current = null
+        remainingRef.current = duration
+        finishingRef.current = false
 
-        if (!isPaused && startTime && mountedRef.current) {
-            intervalRef.current = setInterval(() => {
-                if (!mountedRef.current) return
-
-                const remaining = calculateTimeLeft()
-                setTimeLeft(remaining)
-
-                if (remaining <= 0) {
-                    handleTimerFinish()
-                }
-            }, 1000)
+        if (sessionStartedRef.current) {
+            endSession()
+            sessionStartedRef.current = false
         }
 
-        return clearAllTimers
-    }, [isPaused, startTime, calculateTimeLeft, handleTimerFinish, clearAllTimers])
+        setTimeLeft(duration)
+        setIsPaused(true)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [step, pauseTrigger, duration])
 
+    // Start/stop the ticking interval. This effect only depends on
+    // isPaused, so it runs once per play/pause toggle - not every second.
+    useEffect(() => {
+        if (isPaused) {
+            if (endAtRef.current !== null) {
+                remainingRef.current = Math.max(0, Math.round((endAtRef.current - Date.now()) / 1000))
+                endAtRef.current = null
+            }
+            deactivateKeepAwake(KEEP_AWAKE_TAG)
+            return
+        }
+
+        endAtRef.current = Date.now() + remainingRef.current * 1000
+        activateKeepAwakeAsync(KEEP_AWAKE_TAG)
+
+        if (!sessionStartedRef.current) {
+            startSession(getPhaseType())
+            sessionStartedRef.current = true
+        }
+
+        const interval = setInterval(() => {
+            if (endAtRef.current === null) return
+            const remaining = Math.max(0, Math.round((endAtRef.current - Date.now()) / 1000))
+            setTimeLeft(remaining)
+            if (remaining <= 0) {
+                finishPhase()
+            }
+        }, 1000)
+
+        return () => {
+            clearInterval(interval)
+            deactivateKeepAwake(KEEP_AWAKE_TAG)
+        }
+    }, [isPaused, finishPhase, startSession, getPhaseType])
+
+    // Re-sync the displayed time when the app returns to the foreground.
+    // Registered once for the component's lifetime instead of every tick.
     useEffect(() => {
         const handleAppStateChange = (nextAppState: string) => {
-            if (nextAppState === 'active' && !isPaused && startTime && mountedRef.current) {
-                const remaining = calculateTimeLeft()
-                safeSetState(() => setTimeLeft(remaining))
+            if (nextAppState === 'active' && endAtRef.current !== null) {
+                const remaining = Math.max(0, Math.round((endAtRef.current - Date.now()) / 1000))
+                setTimeLeft(remaining)
+                if (remaining <= 0) {
+                    finishPhase()
+                }
             }
         }
 
         const subscription = AppState.addEventListener('change', handleAppStateChange)
-        return () => subscription?.remove()
-    }, [isPaused, startTime, calculateTimeLeft, safeSetState])
-
-    useEffect(() => {
-        if (!isPaused && !startTime && mountedRef.current) {
-            safeSetState(() => {
-                setStartTime(Date.now())
-                setPausedTime(0)
-                pauseStartRef.current = null
-            })
-        }
-    }, [isPaused, startTime, safeSetState])
-
-    useEffect(() => {
-        if (isPaused && startTime && !pauseStartRef.current) {
-            pauseStartRef.current = Date.now()
-        } else if (!isPaused && pauseStartRef.current && mountedRef.current) {
-            const pauseDuration = Date.now() - pauseStartRef.current
-            safeSetState(() => {
-                setPausedTime(prev => prev + pauseDuration)
-            })
-            pauseStartRef.current = null
-        }
-    }, [isPaused, startTime, safeSetState])
-
-    useEffect(() => {
-        clearAllTimers()
-        isProcessingRef.current = false
-
-        // End session on reset
-        if (sessionStartTimeRef.current) {
-            endSession()
-            sessionStartTimeRef.current = null
-        }
-
-        safeSetState(() => {
-            setTimeLeft(duration)
-            setStartTime(null)
-            setPausedTime(0)
-            pauseStartRef.current = null
-            setIsPaused(true)
-        })
-    }, [step, phaze, pauseTrigger, duration, clearAllTimers, safeSetState, endSession])
-
-    useEffect(() => {
-        if (isPaused && !startTime && mountedRef.current) {
-            safeSetState(() => setTimeLeft(duration))
-        }
-    }, [duration, isPaused, startTime, safeSetState])
-
-    // Track statistics session - SIMPLIFIED VERSION
-    useEffect(() => {
-        // Start session when timer starts running
-        if (!isPaused && startTime && !sessionStartTimeRef.current) {
-            startSession(getPhaseType())
-            sessionStartTimeRef.current = Date.now()
-        }
-    }, [isPaused, startTime, startSession, getPhaseType])
+        return () => subscription.remove()
+    }, [finishPhase])
 
     useEffect(() => {
         return () => {
-            mountedRef.current = false
-            clearAllTimers()
-            isProcessingRef.current = false
-            // Clean up session on unmount
-            if (sessionStartTimeRef.current) {
+            if (sessionStartedRef.current) {
                 endSession()
-                sessionStartTimeRef.current = null
+                sessionStartedRef.current = false
             }
         }
-    }, [clearAllTimers, endSession])
+    }, [endSession])
 
     const formatTime = useCallback((totalSeconds: number) => {
         const minutes = Math.floor(totalSeconds / 60)

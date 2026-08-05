@@ -1,7 +1,7 @@
 import clsx from 'clsx'
 import { cssInterop } from 'nativewind'
 import React, { useState, useMemo, useEffect } from 'react'
-import { Alert, BackHandler, Pressable, Text, View } from 'react-native'
+import { Alert, BackHandler, InteractionManager, Pressable, Text, View } from 'react-native'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import Svg, { Path, Rect } from 'react-native-svg'
 import { Bar, CartesianChart, Pie, PolarChart } from 'victory-native'
@@ -22,13 +22,20 @@ cssInterop(Path, {
 
 export default function Statistics({ phaze }: { phaze: string }) {
     const [openPanel, setOpenPanel] = useState(false)
+    const [hasOpened, setHasOpened] = useState(false)
     const [currentWeek, setCurrentWeek] = useState(0) // 0 = current week, -1 = last week, etc.
     const translateX = useSharedValue(100)
     const handleDoubleBackExit = useDoubleBackExit()
     const font = useFont(inter, 12)
 
-    // Get statistics from store
-    const { totalCycles, getWeeklyData, getWeeklyTimeByPhase, resetStatistics, statsUpdated } = useStatisticsStore()
+    // Get statistics from store - individual selectors so this always-mounted
+    // component only re-renders when the fields it actually uses change,
+    // instead of on every statistics store update (e.g. daily time logging).
+    const totalCycles = useStatisticsStore(state => state.totalCycles)
+    const statsUpdated = useStatisticsStore(state => state.statsUpdated)
+    const getWeeklyData = useStatisticsStore(state => state.getWeeklyData)
+    const getWeeklyTimeByPhase = useStatisticsStore(state => state.getWeeklyTimeByPhase)
+    const resetStatistics = useStatisticsStore(state => state.resetStatistics)
 
 
     const handleButtonPress = () => {
@@ -38,8 +45,19 @@ export default function Statistics({ phaze }: { phaze: string }) {
         } else {
             translateX.value = withTiming(0, { duration: 300 })
             setOpenPanel(true)
+            setHasOpened(true)
         }
     }
+
+    // Mount the heavy chart content shortly after the app becomes
+    // interactive, rather than only on first tap - avoids the mount cost
+    // colliding with the slide-open animation (which was dropping frames).
+    useEffect(() => {
+        const task = InteractionManager.runAfterInteractions(() => {
+            setHasOpened(true)
+        })
+        return () => task.cancel()
+    }, [])
 
     useEffect(() => {
         const backAction = () => {
@@ -212,6 +230,7 @@ export default function Statistics({ phaze }: { phaze: string }) {
                     )}>Statistics</Text>
                 </View>
 
+                {hasOpened && <>
                 {/* Total Cycles Card */}
                 <View>
                     <Text className={clsx(
@@ -462,6 +481,7 @@ export default function Statistics({ phaze }: { phaze: string }) {
                         }
                     )}>Reset All Statistics</Text>
                 </Pressable>
+                </>}
             </Animated.ScrollView >
         </>
     )

@@ -48,10 +48,11 @@ const themes: any = {
 }
 
 export default function Theme({ name, children }: { name: string, children: React.ReactNode }) {
-    const { settings } = useSettingsStore()
+    const settings = useSettingsStore(state => state.settings)
     const systemColorScheme = useColorScheme()
     const [themeLoaded, setThemeLoaded] = useState(false)
-    const { theme, setTheme } = useThemeStore(state => state)
+    const theme = useThemeStore(state => state.theme)
+    const setTheme = useThemeStore(state => state.setTheme)
 
     useEffect(() => {
         const loadTheme = async () => {

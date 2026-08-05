@@ -2,11 +2,10 @@ import React, { useState, useRef, useEffect, useCallback } from 'react'
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg'
 import clsx from 'clsx'
 import { cssInterop } from 'nativewind'
-import { BackHandler, Pressable, Text, View } from 'react-native'
+import { BackHandler, InteractionManager, Pressable, Text, View } from 'react-native'
 import { SegmentedControl, SegmentItem } from '@/components/ui/segment-control/SegmentControl'
+import DurationPicker from '@/components/ui/DurationPicker'
 import { QUICK_TIMES } from '@/constants/DurationConstants'
-import { Picker } from '@react-native-picker/picker'
-import { Platform } from 'react-native'
 import { SettingsType } from '@/constants/SettingsConstants'
 import Animated, {
     useSharedValue,
@@ -14,7 +13,6 @@ import Animated, {
     withTiming,
 } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
-import { useThemeStore } from '@/stores/themeStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { useDoubleBackExit } from '@/hooks/useDoubleBackExit'
 import { useDebounce } from '@/hooks/useDebounce'
@@ -29,9 +27,10 @@ cssInterop(Path, {
 
 function Settings({ phaze, step, setStep }: { phaze: string, step: number, setStep: (step: number) => void }) {
     const [openPanel, setOpenPanel] = useState(false)
+    const [hasOpened, setHasOpened] = useState(false)
     const translateX = useSharedValue(100)
-    const { theme } = useThemeStore(state => state)
-    const { settings, updateSetting } = useSettingsStore()
+    const settings = useSettingsStore(state => state.settings)
+    const updateSetting = useSettingsStore(state => state.updateSetting)
     const handleDoubleBackExit = useDoubleBackExit()
 
     const handleButtonPress = () => {
@@ -41,8 +40,19 @@ function Settings({ phaze, step, setStep }: { phaze: string, step: number, setSt
         } else {
             translateX.value = withTiming(0, { duration: 300 })
             setOpenPanel(true)
+            setHasOpened(true)
         }
     }
+
+    // Mount the heavy Picker/segmented-control content shortly after the
+    // app becomes interactive, rather than only on first tap - avoids the
+    // mount cost colliding with the slide-open animation.
+    useEffect(() => {
+        const task = InteractionManager.runAfterInteractions(() => {
+            setHasOpened(true)
+        })
+        return () => task.cancel()
+    }, [])
 
     useEffect(() => {
         const backAction = () => {
@@ -170,7 +180,7 @@ function Settings({ phaze, step, setStep }: { phaze: string, step: number, setSt
                     )}>Settings</Text>
                 </View>
 
-                <View className='p-6'>
+                {hasOpened && <View className='p-6'>
                     <View>
                         <Text className={clsx(
                             'text-xl font-medium', {
@@ -402,48 +412,13 @@ function Settings({ phaze, step, setStep }: { phaze: string, step: number, setSt
                         }
 
                         )}>Focus time:</Text>
-                        <View className={clsx(
-                            'border rounded-full mt-2 overflow-hidden',
-                            {
-                                'border-pink-secondary bg-pink-secondary': phaze === 'work',
-                                'border-green-secondary bg-green-secondary': phaze === 'short_break',
-                                'border-blue-secondary bg-blue-secondary': phaze === 'long_break',
-                            }
-                        )}>
-
-                            <Picker
-                                selectedValue={currentSettings.focusDuration}
-                                onValueChange={(itemValue) => handleFocusDurationChange(itemValue)}
-                                style={{
-                                    marginLeft: 7,
-                                    color: theme === 'dark' ? '#ffffff' : (
-                                        phaze === 'work'
-                                            ? '#471515'
-                                            : phaze === 'short_break'
-                                                ? '#14401d'
-                                                : '#153047'
-                                    )
-                                }}
-                                itemStyle={Platform.OS === 'ios' ? {
-                                    marginLeft: 7,
-                                    color: theme === 'dark' ? '#ffffff' : (
-                                        phaze === 'work'
-                                            ? '#471515'
-                                            : phaze === 'short_break'
-                                                ? '#14401d'
-                                                : '#153047'
-                                    )
-                                } : undefined}
-                            >
-                                {QUICK_TIMES.map((time) => (
-                                    <Picker.Item
-                                        key={time.value}
-                                        label={time.label}
-                                        value={time.value}
-                                    />
-                                ))}
-                            </Picker>
-                        </View>
+                        <DurationPicker
+                            label="Focus time"
+                            selectedValue={currentSettings.focusDuration}
+                            onValueChange={handleFocusDurationChange}
+                            options={QUICK_TIMES}
+                            phaze={phaze}
+                        />
                     </View>
                     <View className='mt-4'>
                         <Text className={clsx(
@@ -454,48 +429,13 @@ function Settings({ phaze, step, setStep }: { phaze: string, step: number, setSt
                         }
 
                         )}>Short break time:</Text>
-                        <View className={clsx(
-                            'border rounded-full mt-2 overflow-hidden',
-                            {
-                                'border-pink-secondary bg-pink-secondary': phaze === 'work',
-                                'border-green-secondary bg-green-secondary': phaze === 'short_break',
-                                'border-blue-secondary bg-blue-secondary': phaze === 'long_break',
-                            }
-                        )}>
-
-                            <Picker
-                                selectedValue={currentSettings.shortBreakDuration}
-                                onValueChange={(itemValue) => handleShortBreakDurationChange(itemValue)}
-                                style={{
-                                    marginLeft: 7,
-                                    color: theme === 'dark' ? '#ffffff' : (
-                                        phaze === 'work'
-                                            ? '#471515'
-                                            : phaze === 'short_break'
-                                                ? '#14401d'
-                                                : '#153047'
-                                    )
-                                }}
-                                itemStyle={Platform.OS === 'ios' ? {
-                                    marginLeft: 7,
-                                    color: theme === 'dark' ? '#ffffff' : (
-                                        phaze === 'work'
-                                            ? '#471515'
-                                            : phaze === 'short_break'
-                                                ? '#14401d'
-                                                : '#153047'
-                                    )
-                                } : undefined}
-                            >
-                                {QUICK_TIMES.map((time) => (
-                                    <Picker.Item
-                                        key={time.value}
-                                        label={time.label}
-                                        value={time.value}
-                                    />
-                                ))}
-                            </Picker>
-                        </View>
+                        <DurationPicker
+                            label="Short break time"
+                            selectedValue={currentSettings.shortBreakDuration}
+                            onValueChange={handleShortBreakDurationChange}
+                            options={QUICK_TIMES}
+                            phaze={phaze}
+                        />
                     </View>
                     <View className='mt-4'>
                         <Text className={clsx(
@@ -506,50 +446,15 @@ function Settings({ phaze, step, setStep }: { phaze: string, step: number, setSt
                         }
 
                         )}>Long break time:</Text>
-                        <View className={clsx(
-                            'border rounded-full mt-2 overflow-hidden',
-                            {
-                                'border-pink-secondary bg-pink-secondary': phaze === 'work',
-                                'border-green-secondary bg-green-secondary': phaze === 'short_break',
-                                'border-blue-secondary bg-blue-secondary': phaze === 'long_break',
-                            }
-                        )}>
-
-                            <Picker
-                                selectedValue={currentSettings.longBreakDuration}
-                                onValueChange={(itemValue) => handleLongBreakDurationChange(itemValue)}
-                                style={{
-                                    marginLeft: 7,
-                                    color: theme === 'dark' ? '#ffffff' : (
-                                        phaze === 'work'
-                                            ? '#471515'
-                                            : phaze === 'short_break'
-                                                ? '#14401d'
-                                                : '#153047'
-                                    )
-                                }}
-                                itemStyle={Platform.OS === 'ios' ? {
-                                    marginLeft: 7,
-                                    color: theme === 'dark' ? '#ffffff' : (
-                                        phaze === 'work'
-                                            ? '#471515'
-                                            : phaze === 'short_break'
-                                                ? '#14401d'
-                                                : '#153047'
-                                    )
-                                } : undefined}
-                            >
-                                {QUICK_TIMES.map((time) => (
-                                    <Picker.Item
-                                        key={time.value}
-                                        label={time.label}
-                                        value={time.value}
-                                    />
-                                ))}
-                            </Picker>
-                        </View>
+                        <DurationPicker
+                            label="Long break time"
+                            selectedValue={currentSettings.longBreakDuration}
+                            onValueChange={handleLongBreakDurationChange}
+                            options={QUICK_TIMES}
+                            phaze={phaze}
+                        />
                     </View>
-                </View>
+                </View>}
             </Animated.ScrollView>
         </>
     )

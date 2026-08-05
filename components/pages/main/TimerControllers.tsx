@@ -26,7 +26,7 @@ interface TimerControllersProps {
 
 export default function TimerControllers({ pauseTrigger, setPauseTrigger, phaze, isPaused, setIsPaused, nextStep }: TimerControllersProps) {
     const [isDisabled, setIsDisabled] = useState(false)
-    const { settings } = useSettingsStore()
+    const settings = useSettingsStore(state => state.settings)
     const [musicHasStarted, setMusicHasStarted] = useState(false)
     const { player: player2, didJustFinish, playing } = useLofiPlayer()
 

@@ -28,10 +28,10 @@ function HomeScreen() {
     const [step, setStep] = useState<number>(1)
     const [isPaused, setIsPaused] = useState<boolean>(true)
     const [pauseTrigger, setPauseTrigger] = useState<boolean>(false)
-    const { settings: settingsObj } = useSettingsStore()
+    const settingsObj = useSettingsStore(state => state.settings)
     const { colorScheme } = useColorScheme()
     const player1 = useAudioPlayer(btnPressSource)
-    const { setTheme } = useThemeStore(state => state)
+    const setTheme = useThemeStore(state => state.setTheme)
     const phaze = scenario[settingsObj.stepsMode][step - 1]
 
     useEffect(() => {
