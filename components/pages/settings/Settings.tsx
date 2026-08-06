@@ -1,8 +1,8 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react'
+import React, { useState, useEffect } from 'react'
 import Svg, { Circle, Line, Path, Rect } from 'react-native-svg'
 import clsx from 'clsx'
 import { cssInterop } from 'nativewind'
-import { BackHandler, InteractionManager, Pressable, Text, View } from 'react-native'
+import { InteractionManager, Pressable, Text, View } from 'react-native'
 import { SegmentedControl, SegmentItem } from '@/components/ui/segment-control/SegmentControl'
 import DurationPicker from '@/components/ui/DurationPicker'
 import { QUICK_TIMES } from '@/constants/DurationConstants'
@@ -14,7 +14,6 @@ import Animated, {
 } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
 import { useSettingsStore } from '@/stores/settingsStore'
-import { useDoubleBackExit } from '@/hooks/useDoubleBackExit'
 import { useDebounce } from '@/hooks/useDebounce'
 
 cssInterop(Svg, { className: 'style' })
@@ -25,23 +24,24 @@ cssInterop(Path, {
     },
 })
 
-function Settings({ phaze, step, setStep }: { phaze: string, step: number, setStep: (step: number) => void }) {
-    const [openPanel, setOpenPanel] = useState(false)
+interface SettingsProps {
+    phaze: string
+    setStep: (step: number) => void
+    openPanel: boolean
+    onOpenChange: (open: boolean) => void
+}
+
+function Settings({ phaze, setStep, openPanel, onOpenChange }: SettingsProps) {
     const [hasOpened, setHasOpened] = useState(false)
     const translateX = useSharedValue(100)
     const settings = useSettingsStore(state => state.settings)
     const updateSetting = useSettingsStore(state => state.updateSetting)
-    const handleDoubleBackExit = useDoubleBackExit()
 
     const handleButtonPress = () => {
-        if (openPanel) {
-            translateX.value = withTiming(100, { duration: 300 })
-            setOpenPanel(false)
-        } else {
-            translateX.value = withTiming(0, { duration: 300 })
-            setOpenPanel(true)
+        if (!openPanel) {
             setHasOpened(true)
         }
+        onOpenChange(!openPanel)
     }
 
     // Mount the heavy Picker/segmented-control content shortly after the
@@ -54,23 +54,12 @@ function Settings({ phaze, step, setStep }: { phaze: string, step: number, setSt
         return () => task.cancel()
     }, [])
 
+    // Drive the slide animation from the openPanel prop rather than only
+    // from the button press, so closing this panel from elsewhere (e.g. the
+    // centralized hardware-back handler in index.tsx) animates correctly too.
     useEffect(() => {
-        const backAction = () => {
-            if (openPanel) {
-                handleButtonPress()
-            } else {
-                handleDoubleBackExit()
-            }
-            return true
-        }
-
-        const backHandler = BackHandler.addEventListener(
-            'hardwareBackPress',
-            backAction,
-        )
-
-        return () => backHandler.remove()
-    }, [handleButtonPress, handleDoubleBackExit, openPanel])
+        translateX.value = withTiming(openPanel ? 0 : 100, { duration: 300 })
+    }, [openPanel])
 
     const animatedStyle = useAnimatedStyle(() => {
         return {
@@ -112,9 +101,7 @@ function Settings({ phaze, step, setStep }: { phaze: string, step: number, setSt
     }, 300)
 
     const handleStepsModalChange = useDebounce((stepsMode: string) => {
-        if (stepsMode === '4 steps' && step > 4) {
-            setStep(1)
-        }
+        setStep(1)
         updateSetting('stepsMode', stepsMode as SettingsType['stepsMode'])
     }, 300)
 
@@ -329,7 +316,7 @@ function Settings({ phaze, step, setStep }: { phaze: string, step: number, setSt
                             'text-blue-primary': phaze === 'long_break',
                         }
 
-                        )}>Skip steps:</Text>
+                        )}>Proceed steps:</Text>
                         <SegmentedControl
                             selectedValue={currentSettings.skip}
                             onValueChange={handleSkipHandler}

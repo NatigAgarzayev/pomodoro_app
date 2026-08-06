@@ -1,12 +1,11 @@
 import clsx from 'clsx'
 import { cssInterop } from 'nativewind'
 import React, { useState, useMemo, useEffect } from 'react'
-import { Alert, BackHandler, InteractionManager, Pressable, Text, View } from 'react-native'
+import { Alert, InteractionManager, Pressable, Text, View } from 'react-native'
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated'
 import Svg, { Path, Rect } from 'react-native-svg'
 import { Bar, CartesianChart, Pie, PolarChart } from 'victory-native'
 import { useStatisticsStore } from '@/stores/statisticsStore'
-import { useDoubleBackExit } from '@/hooks/useDoubleBackExit'
 import inter from "../../../assets/inter-medium.ttf"
 import { useFont } from '@shopify/react-native-skia'
 import { Text as SkiaText } from '@shopify/react-native-skia'
@@ -20,12 +19,16 @@ cssInterop(Path, {
     },
 })
 
-export default function Statistics({ phaze }: { phaze: string }) {
-    const [openPanel, setOpenPanel] = useState(false)
+interface StatisticsProps {
+    phaze: string
+    openPanel: boolean
+    onOpenChange: (open: boolean) => void
+}
+
+export default function Statistics({ phaze, openPanel, onOpenChange }: StatisticsProps) {
     const [hasOpened, setHasOpened] = useState(false)
     const [currentWeek, setCurrentWeek] = useState(0) // 0 = current week, -1 = last week, etc.
     const translateX = useSharedValue(100)
-    const handleDoubleBackExit = useDoubleBackExit()
     const font = useFont(inter, 12)
 
     // Get statistics from store - individual selectors so this always-mounted
@@ -39,14 +42,10 @@ export default function Statistics({ phaze }: { phaze: string }) {
 
 
     const handleButtonPress = () => {
-        if (openPanel) {
-            translateX.value = withTiming(100, { duration: 300 })
-            setOpenPanel(false)
-        } else {
-            translateX.value = withTiming(0, { duration: 300 })
-            setOpenPanel(true)
+        if (!openPanel) {
             setHasOpened(true)
         }
+        onOpenChange(!openPanel)
     }
 
     // Mount the heavy chart content shortly after the app becomes
@@ -59,23 +58,12 @@ export default function Statistics({ phaze }: { phaze: string }) {
         return () => task.cancel()
     }, [])
 
+    // Drive the slide animation from the openPanel prop rather than only
+    // from the button press, so closing this panel from elsewhere (e.g. the
+    // centralized hardware-back handler in index.tsx) animates correctly too.
     useEffect(() => {
-        const backAction = () => {
-            if (openPanel) {
-                handleButtonPress()
-            } else {
-                handleDoubleBackExit()
-            }
-            return true
-        }
-
-        const backHandler = BackHandler.addEventListener(
-            'hardwareBackPress',
-            backAction,
-        )
-
-        return () => backHandler.remove()
-    }, [handleButtonPress, handleDoubleBackExit, openPanel])
+        translateX.value = withTiming(openPanel ? 0 : 100, { duration: 300 })
+    }, [openPanel])
 
     const animatedStyle = useAnimatedStyle(() => {
         return {
