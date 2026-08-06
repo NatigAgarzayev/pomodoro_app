@@ -9,14 +9,14 @@
         "userInterfaceStyle": "automatic",
         "newArchEnabled": true,
         "splash": {
-            "image": "./assets/splash.png",
+            "image": "./assets/icon.png",
             "resizeMode": "contain",
             "backgroundColor": "#ffffff"
         },
         "ios": {
             "supportsTablet": true,
             "splash": {
-                "image": "./assets/splash.png",
+                "image": "./assets/icon.png",
                 "resizeMode": "contain",
                 "backgroundColor": "#ffffff"
             }
@@ -28,7 +28,7 @@
                 "backgroundColor": "#ffffff"
             },
             "splash": {
-                "image": "./assets/splash.png",
+                "image": "./assets/icon.png",
                 "resizeMode": "contain",
                 "backgroundColor": "#ffffff"
             },
