@@ -5,39 +5,32 @@
         "slug": "pomodoro_app",
         "version": "1.3.0",
         "orientation": "portrait",
-        "icon": "./assets/splashlightfixed.png",
+        "icon": "./assets/icon.png",
         "userInterfaceStyle": "automatic",
         "newArchEnabled": true,
         "splash": {
-            "image": "./assets/splashlightfixed.png",
+            "image": "./assets/splash.png",
             "resizeMode": "contain",
             "backgroundColor": "#ffffff"
         },
         "ios": {
             "supportsTablet": true,
             "splash": {
-                "image": "./assets/splashlightfixed.png",
+                "image": "./assets/splash.png",
                 "resizeMode": "contain",
-                "backgroundColor": "#ffffff",
-                "dark": {
-                    "image": "./assets/splashdarkfixed.png",
-                    "backgroundColor": "#000000"
-                }
+                "backgroundColor": "#ffffff"
             }
         },
         "android": {
             "adaptiveIcon": {
-                "foregroundImage": "./assets/splashlightfixed.png",
+                "foregroundImage": "./assets/icon.png",
+                "monochromeImage": "./assets/icon.png",
                 "backgroundColor": "#ffffff"
             },
             "splash": {
-                "image": "./assets/splashlightfixed.png",
+                "image": "./assets/splash.png",
                 "resizeMode": "contain",
-                "backgroundColor": "#ffffff",
-                "dark": {
-                    "image": "./assets/splashdarkfixed.png",
-                    "backgroundColor": "#000000"
-                }
+                "backgroundColor": "#ffffff"
             },
             "edgeToEdgeEnabled": true,
             "predictiveBackGestureEnabled": false,
