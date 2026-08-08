@@ -14,7 +14,6 @@ import Animated, {
 } from 'react-native-reanimated'
 import * as Haptics from 'expo-haptics'
 import { useSettingsStore } from '@/stores/settingsStore'
-import { useDebounce } from '@/hooks/useDebounce'
 
 cssInterop(Svg, { className: 'style' })
 cssInterop(Path, {
@@ -67,22 +66,22 @@ function Settings({ phaze, setStep, openPanel, onOpenChange }: SettingsProps) {
         }
     })
 
-    const handleThemeChange = useDebounce((theme: string) => {
+    const handleThemeChange = (theme: string) => {
         updateSetting('theme', theme as SettingsType['theme'])
-    }, 300)
+    }
 
-    const handleLofiChange = useDebounce((lofi: string) => {
+    const handleLofiChange = (lofi: string) => {
         updateSetting('lofi', lofi as SettingsType['lofi'])
-    }, 300)
+    }
 
-    const handleSoundChange = useDebounce((sound: string) => {
+    const handleSoundChange = (sound: string) => {
         if (sound === 'System') {
             Haptics.notificationAsync(
                 Haptics.NotificationFeedbackType.Success
             )
         }
         updateSetting('sound', sound as SettingsType['sound'])
-    }, 300)
+    }
 
     const handleFocusDurationChange = (duration: number) => {
         updateSetting('focusDuration', duration)
@@ -96,14 +95,14 @@ function Settings({ phaze, setStep, openPanel, onOpenChange }: SettingsProps) {
         updateSetting('longBreakDuration', duration)
     }
 
-    const handleSkipHandler = useDebounce((skip: string) => {
+    const handleSkipHandler = (skip: string) => {
         updateSetting('skip', skip as SettingsType['skip'])
-    }, 300)
+    }
 
-    const handleStepsModalChange = useDebounce((stepsMode: string) => {
+    const handleStepsModalChange = (stepsMode: string) => {
         setStep(1)
         updateSetting('stepsMode', stepsMode as SettingsType['stepsMode'])
-    }, 300)
+    }
 
     const currentSettings = settings
 
