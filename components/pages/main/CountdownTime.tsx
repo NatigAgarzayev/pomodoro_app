@@ -104,12 +104,14 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
         // Cycle-completion (incrementing the counter, firing the celebration,
         // and the stronger vibration) is handled generically in the reset
         // effect below, since it needs to fire whether the phase finished
-        // naturally or was manually skipped - this callback only runs on
-        // natural finish, so it just does the regular per-phase tap.
+        // naturally or was manually skipped. The regular per-phase tap here
+        // is only for non-cycle-ending transitions - otherwise a natural
+        // finish would get this tap *and* the strong vibration, while a
+        // skip only gets the strong vibration, feeling inconsistent.
         const wasFullCycleEnd = phazeRef.current === 'long_break'
 
         const currentSettings = settingsRef.current
-        if (currentSettings.sound === 'System') {
+        if (currentSettings.sound === 'System' && !wasFullCycleEnd) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
         }
         if (currentSettings.sound === 'On') {
@@ -177,7 +179,16 @@ function CountdownTime({ pauseTrigger, step, scenario, isPaused, setIsPaused, ne
                 // finishPhase) so it also triggers when the last step is
                 // skipped, not just when it finishes naturally.
                 Vibration.cancel()
-                Vibration.vibrate([0, 500, 150, 500, 150, 500, 150, 500])
+                // Deferred slightly so it doesn't fire in the same
+                // synchronous burst as onCycleComplete below, which triggers
+                // the parent to show the Celebration modal - that native
+                // Window creation competing for priority in the same instant
+                // was cutting the pattern short specifically on natural
+                // completion (not on skip, which didn't have this timing
+                // overlap in testing).
+                setTimeout(() => {
+                    Vibration.vibrate([0, 500, 150, 500, 150, 500, 150, 500])
+                }, 100)
             }
             onCycleCompleteRef.current?.(cycleFocusSecondsRef.current)
             cycleFocusSecondsRef.current = 0
